@@ -1,0 +1,20 @@
+{
+  "_说明": "只放外部程序的路径。key/QQ号/群号一律不放这里。空字符串表示未配置。复制本文件为 config-paths.json 后按本机改。",
+  "dsh_cmd": "<你的 DSH 命令行，例如 D:/dsh/resources/runtime/cli/bin/dsh.cmd>",
+  "dsh_workdir": "<你的工作目录>",
+  "astrbot_py": "<AstrBot 自带的 python.exe>",
+  "astrbot_app": "<AstrBot 的 backend/app 目录>",
+  "astrbot_bin": "<AstrBot 的 bin 目录>",
+  "astrbot_cmd_config": "<AstrBot 的 data/cmd_config.json>",
+  "snow_dir": "<SnowLuma 安装目录>",
+  "snow_config": "<SnowLuma 配置目录>",
+  "qq_exe": "<QQ.exe 完整路径>",
+  "pet_exe": "<桌面宠物主程序 exe>",
+  "fish_dir": "<鱼搭子目录>",
+  "fish_exe": "<鱼搭子主程序 exe>",
+  "pet_shared": "<宠物与网关共享目录>",
+  "bili_plugin": "<AstrBot 插件目录>",
+  "bili_data": "<B 站插件数据目录>",
+  "story_dir": "<睡前故事素材目录>",
+  "ffprobe": "<ffprobe.exe 路径>"
+}

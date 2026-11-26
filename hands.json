@@ -1,0 +1,19 @@
+{
+  "on": true,
+  "port": 8777,
+  "reply": "http://127.0.0.1:8778/hands/reply",
+  "voice": true,
+  "max_tokens": 220,
+  "history_turns": 6,
+  "game": false,
+  "game_at": 0.0,
+  "game_ttl": 21600,
+  "sub_seconds": 90,
+  "sub_lines": 40,
+  "frame_max": 6,
+  "frame_min_gap": 30,
+  "frame_per_hour": 30,
+  "frame_hash_gap": 8,
+  "frame_reuse": 180,
+  "frame_resend_gap": 60
+}

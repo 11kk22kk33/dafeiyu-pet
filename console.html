@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head><meta charset="utf-8"><title>小宠物控制台</title><link rel="icon" type="image/png" href="assets/char/favicon.png">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#f4f6f9;--surface:#fff;--surface-2:#f8f9fb;--surface-3:#f1f3f7;--line:#e6e9ef;--line-2:#dbe0e9;--text:#101620;--text-2:#454f5e;--dim:#68717f;--faint:#9aa3b1;--brand:#3d5aa8;--brand-btn:#33509b;--brand-soft:#eef2fb;--brand-line:#ccd8f0;--green:#0b7a54;--green-soft:#e8f6f0;--amber:#8f5c05;--amber-soft:#fdf6e7;--red:#c92b41;--red-text:#8e2739;--radius:10px;--radius-sm:8px;--sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--ctl-h:36px;--topbar-h:56px;--side-w:240px}
+html[data-theme="dark"]{--bg:#0f1419;--surface:#182028;--surface-2:#141c24;--surface-3:#101820;--line:#26333f;--line-2:#31404e;--text:#e6edf3;--text-2:#c2cdd8;--dim:#8b9aa8;--faint:#6b7885;--brand:#7aa5e8;--brand-btn:#5b8ad6;--brand-soft:#182236;--brand-line:#2c3d5c;--green:#3fd6a8;--green-soft:#16332a;--amber:#ffb454;--amber-soft:#2e2519;--red:#e5534b;--red-text:#ff9a93}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 "Microsoft YaHei",system-ui,sans-serif}
+h1,h2,h3,p{margin:0}
+.app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);min-height:100vh}
+.side{background:var(--surface);border-right:1px solid var(--line);padding:var(--sp-5) var(--sp-3);display:flex;flex-direction:column;gap:var(--sp-2)}
+.brand{display:flex;align-items:center;gap:var(--sp-3);padding:0 var(--sp-2) var(--sp-5)}
+.mark{width:32px;height:32px;border-radius:var(--radius-sm);background:var(--brand-btn);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;overflow:hidden;position:relative}
+.mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.brand b{display:block;font-size:14px;font-weight:500}.brand small{display:block;font-size:12px;color:var(--dim)}
+.grp{font-size:12px;color:var(--dim);padding:var(--sp-4) var(--sp-2) var(--sp-1)}
+.nav{display:flex;align-items:center;gap:var(--sp-2);width:100%;height:var(--ctl-h);padding:0 var(--sp-3);border:0;border-radius:var(--radius-sm);background:transparent;color:var(--text-2);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.nav:hover{background:var(--surface-2)}
+.nav.active{background:var(--brand-soft);color:var(--brand-btn);font-weight:500}
+.nav i{width:6px;height:6px;border-radius:50%;background:var(--line-2);flex:0 0 auto}
+.nav.active i{background:var(--brand)}
+.side-foot{padding:var(--sp-4) var(--sp-2) 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:var(--sp-2)}
+.mascot{display:flex;flex-direction:column;align-items:center;gap:var(--sp-1);padding:var(--sp-3) 0 0;margin-top:auto}
+.mascot img{width:112px;height:112px;display:block;filter:saturate(1.02)}
+.mascot span{font-size:12px;color:var(--faint)}
+.topbar{height:var(--topbar-h);display:flex;align-items:center;gap:var(--sp-3);padding:0 var(--sp-5);background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:9}
+.topbar h1{font-size:16px;font-weight:500}
+.crumb{font-size:12px;color:var(--faint)}
+.top-st{margin-left:auto;font-size:12px;color:var(--dim)}
+main{padding:var(--sp-5);max-width:1100px}
+.sec{display:none}.sec.on{display:block}
+.sec-h{font-size:16px;font-weight:500;margin-bottom:var(--sp-2)}
+.lede{font-size:12px;color:var(--dim);margin-bottom:var(--sp-5)}
+.alert{display:flex;align-items:center;gap:var(--sp-2);background:var(--amber-soft);border:1px solid var(--line);border-radius:var(--radius-sm);padding:var(--sp-3);font-size:13px;color:var(--text);margin-bottom:var(--sp-4)}
+.alert[hidden]{display:none}
+.alert .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);flex:0 0 auto}
+.alert button{margin-left:auto}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-3);margin-bottom:var(--sp-5)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-3)}
+.kpi{background:var(--surface-2);border-radius:var(--radius);padding:var(--sp-4)}
+.kpi .k{font-size:12px;color:var(--dim)}.kpi .v{font-size:26px;font-weight:500;line-height:1.3}.kpi .f{font-size:12px;color:var(--dim)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--sp-4);margin-bottom:var(--sp-3)}
+.card b{display:block;font-size:14px;font-weight:500}.card small{font-size:12px;color:var(--dim)}
+.row{display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap}
+.row+.row{margin-top:var(--sp-3)}
+.sw{flex:0 0 auto;width:44px;height:24px;border-radius:999px;background:var(--line-2);border:0;position:relative;cursor:pointer;padding:2px;display:flex;align-items:center;transition:.18s}
+.sw::after{content:"";width:20px;height:20px;border-radius:50%;background:#fff;transition:.18s}
+.sw.on{background:var(--green)}.sw.on::after{transform:translateX(20px)}
+.sw.big{width:60px;height:32px}.sw.big::after{width:28px;height:28px}.sw.big.on::after{transform:translateX(28px)}
+button.act{background:var(--surface);border:1px solid var(--line-2);color:var(--text);border-radius:var(--radius-sm);padding:6px 12px;cursor:pointer;font:inherit;font-size:13px;min-height:var(--ctl-h)}
+button.act:hover{border-color:var(--brand)}button.act.on{border-color:var(--brand);color:var(--brand-btn);background:var(--brand-soft)}button.del:hover{border-color:var(--red);color:var(--red-text)}
+input,select,textarea{background:var(--surface);border:1px solid var(--line-2);color:var(--text);border-radius:var(--radius-sm);padding:6px 8px;font:13px/1.6 inherit;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:1px solid var(--brand)}
+textarea{width:100%;min-height:280px;font:13px/1.7 Consolas,"Microsoft YaHei",monospace;resize:vertical}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--dim);font-weight:500}tr:last-child td{border-bottom:none}
+.chips{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-3)}
+.hint{font-size:12px;color:var(--dim);margin-top:var(--sp-2)}
+.tabs{display:flex;gap:var(--sp-2);margin-bottom:var(--sp-3)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--sp-3);margin-bottom:var(--sp-2)}
+summary{cursor:pointer;font-size:13px;font-weight:500}
+.feat-list{margin:var(--sp-3) 0 0;padding:0;list-style:none}
+.feat-list li{font-size:12px;color:var(--text-2);padding:2px 0 2px 12px;position:relative}
+.feat-list li::before{content:"·";position:absolute;left:2px;color:var(--dim)}
+.feat-list em{font-style:normal;color:var(--dim);font-size:11px;margin-left:var(--sp-2)}
+.status-dots{display:flex;gap:var(--sp-3);flex-wrap:wrap;font-size:12px;color:var(--dim)}
+.status-dots i{font-style:normal}.status-dots i::before{content:"●";margin-right:var(--sp-1);color:var(--line-2)}
+.status-dots i.up{color:var(--green)}.status-dots i.up::before{color:var(--green)}
+.bar{height:6px;background:var(--surface-3);border-radius:999px;overflow:hidden;margin-top:var(--sp-2)}
+.bar i{display:block;height:100%;background:var(--brand);border-radius:999px}
+.muted{color:var(--dim);font-size:12px}
+#toast{position:fixed;right:18px;bottom:18px;background:var(--surface);border:1px solid var(--brand);color:var(--text);padding:8px 14px;border-radius:var(--radius-sm);opacity:0;transition:.2s;font-size:13px;z-index:20}
+#toast.show{opacity:1}
+.diary-item{position:relative;padding:14px 16px 14px 20px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px}
+.diary-item::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--brand)}
+.diary-item .d-day{display:flex;align-items:baseline;gap:8px;font-size:13px;color:var(--text)}
+.diary-item .d-day b{font-weight:500}
+.diary-item .d-day em{font-style:normal;font-size:12px;color:var(--faint)}
+.diary-item p{margin:8px 0 0;line-height:1.9;white-space:pre-wrap;word-break:break-word;color:var(--text-2)}
+.diary-empty{padding:32px 0;text-align:center;color:var(--dim);font-size:13px}
+@media(max-width:820px){.app{grid-template-columns:1fr}.side{display:none}.grid3,.grid2{grid-template-columns:1fr}}
+</style></head><body>
+<div class="app">
+<aside class="side">
+  <div class="brand"><div class="mark">鱼<img src="assets/char/avatar.webp" alt="" onerror="this.remove()"></div><div><b>小宠物控制台</b><small>全功能开关台</small></div></div>
+  <div class="grp">主菜单</div>
+  <button class="nav active" data-s="overview"><i></i>总览</button>
+  <button class="nav" data-s="launch"><i></i>开程序</button>
+  <button class="nav" data-s="pet"><i></i>桌宠与鱼搭子</button>
+  <button class="nav" data-s="modules"><i></i>模块开关</button>
+  <button class="nav" data-s="usage"><i></i>用量与消耗</button>
+  <div class="grp">配置</div>
+  <button class="nav" data-s="policy"><i></i>权限与白名单</button>
+  <button class="nav" data-s="persona"><i></i>人格卡</button>
+  <button class="nav" data-s="qq"><i></i>QQ 与联动</button>
+  <button class="nav" data-s="emotion"><i></i>情绪状态</button>
+  <button class="nav" data-s="todo"><i></i>待办提醒</button>
+  <button class="nav" data-s="diary"><i></i>日记</button>
+  <div class="mascot"><img src="assets/char/mascot.webp" alt="大肥鱼" onerror="this.parentNode.style.display='none'"></div>
+  <div class="side-foot">
+    <button class="act" onclick="setTheme()">切换 浅色 / 深色</button>
+    <span class="hint" id="theme-tip">当前：浅色</span>
+  </div>
+</aside>
+<div class="right">
+<header class="topbar"><h1 id="crumb">总览</h1><span class="crumb" id="crumb-path">控制台 / 总览</span><span class="top-st" id="st-proxy">连接中…</span><button class="act" onclick="load()">刷新</button></header>
+<main>
+<div class="alert" id="alerts" hidden></div>
+
+<section class="sec on" id="s-overview">
+  <h2 class="sec-h">总览</h2><p class="lede">异常置顶，然后才是正常状态。数据每 5 秒自动刷新。</p>
+  <div class="grid3">
+    <div class="kpi"><div class="k">全部功能</div><div class="v" id="ov-master">—</div><div class="f"><button class="sw big" id="sw-master"></button></div></div>
+    <div class="kpi"><div class="k">白名单</div><div class="v" id="ov-people">—</div><div class="f" id="st-people">—</div></div>
+    <div class="kpi"><div class="k">桌宠</div><div class="v" id="ov-pet">—</div><div class="f" id="st-pet">—</div></div>
+  </div>
+  <div class="card"><b>快捷操作</b><small>一键开启会同时打开全部功能与主人模式；一键关闭全部停。</small>
+    <div class="row" style="margin-top:12px"><button class="act" onclick="quick(true)">一键开启（全部功能＋主人模式）</button><button class="act del" onclick="quick(false)">一键关闭（全部功能停）</button><span class="hint" id="quick-tip"></span></div>
+  </div>
+  <div class="card"><b>系统状态</b><small>哪个进程掉了，去「开程序」补。</small><div class="status-dots" id="launch-tip" style="margin-top:12px"></div></div>
+  <div class="card"><b>常驻状态</b><small>后台任务不随页面切换消失；这里只显示真实上报的状态。</small>
+    <div class="row" style="margin-top:12px"><span class="muted" id="ov-hands">鱼搭子挂件：读取中</span><span class="muted" id="ov-usage">用量：读取中</span></div></div>
+</section>
+
+<section class="sec" id="s-launch">
+  <h2 class="sec-h">开程序</h2><p class="lede">三个独立进程：大脑链路 / 桌宠 / 鱼搭子挂件。这里只管启停。</p>
+<div class="card" id="onboard-card">
+  <b>高级：生成接入指引文本</b>
+  <small>给已有环境的人用；零基础请双击 setup.html 走安装向导。</small>
+  <div class="row" style="margin-top:12px">
+    <button class="act" onclick="genGuide('existing')">① 我已装过 AstrBot / QQ，代码可能改过</button>
+    <button class="act" onclick="genGuide('fresh')">② 我零基础，从没装过</button>
+    <button class="act" onclick="runProbe()">探测本机环境</button>
+  </div>
+  <div id="guide-out" style="margin-top:12px" hidden>
+    <textarea id="guide-text" readonly style="min-height:320px"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="act" onclick="copyGuide()">复制全文</button>
+      <span class="hint" id="guide-tip">复制后发给接入的 AI，或照着步骤自己做。</span>
+    </div>
+  </div>
+</div>
+  <div class="grid3" id="launch-cards"></div>
+  <div class="card"><b>在线状态</b><div class="status-dots" id="launch-tip2" style="margin-top:12px"></div></div>
+  <p class="hint">控制台本身就是 8787 的代理，不用单独启；「小宠物」按钮补的是 SnowLuma → AstrBot → QQ 这条链。</p>
+</section>
+
+<section class="sec" id="s-pet">
+  <h2 class="sec-h">桌宠与鱼搭子</h2><p class="lede">鱼搭子单独一块：状态、唯一即时开关、原窗口入口；其余配置只读。下方桌宠清单是只读快照。</p>
+  <div class="card"><b>鱼搭子挂件</b><small>独立进程 fb-merged.exe，通过 8777 / 8778 与本机大脑对接。它的窗口是打包程序，界面代码无法移植；这一块复刻的是它的状态与可配置项。</small>
+    <div class="row" style="margin-top:12px"><button class="act" onclick="launch('fish',true)">打开原窗口</button><button class="act del" onclick="launch('fish',false)">关闭挂件</button><span class="muted" id="fish-run">—</span></div>
+    <div class="row" style="margin-top:12px"><span class="muted" id="hands-live">运行状态：读取中</span></div>
+    <div id="hands-sw" style="margin-top:12px"></div>
+    <div id="hands-num" style="margin-top:12px"></div>
+    <p class="hint" id="hands-tip">只有「游戏模式」可即时切换。其余项只读：改 hands.json 后须重启大脑服务 proxy.py 才生效，重启鱼搭子 exe 无效。</p>
+  </div>
+  <h3 style="font-size:13px;margin:24px 0 8px;color:var(--dim)">桌宠功能清单（只读）</h3>
+  <p class="hint" style="margin-bottom:12px">按 2026-11-01 本机配置逐项核过。桌宠是冻结包、无源码，配置文件路径当前不存在，这些项目前没有反向控制通道，因此不做假开关。</p>
+  <div id="pet-feats"></div>
+</section>
+
+<section class="sec" id="s-modules">
+  <h2 class="sec-h">模块开关</h2><p class="lede">按域分组。改完立即生效，代码里用 mod_on("id") 判断。</p>
+  <div id="modules"></div>
+  <div class="card" style="border-color:var(--amber)"><b>语音通话（voice_call）· 高消耗</b><small>默认关闭。关闭时不加载语音模块、不起线程/端口/定时器、不改聊天路径；打开后首次访问 /voice 才按需初始化。</small>
+    <div class="row" style="margin-top:12px"><span class="muted">开关在上方「能力」分组里，点一下即时生效；从开切回关会立即释放资源。</span></div>
+  </div>
+  <p class="hint">新增模块：在 D:\pet-shared\modules.json 里加一条（id / name / desc / kind / on），刷新即出现。</p>
+</section>
+
+<section class="sec" id="s-usage">
+  <h2 class="sec-h">用量与消耗</h2><p class="lede">token 带千分位不做「1.2 万」；金额小于一厘显示「&lt;¥0.001」，不假装免费。金额为估算值。</p>
+  <div class="grid3">
+    <div class="kpi"><div class="k">今日调用</div><div class="v" id="u-calls">—</div><div class="f">次模型请求</div></div>
+    <div class="kpi"><div class="k">今日 token</div><div class="v" id="u-tokens">—</div><div class="f" id="u-tokens-f">输入 / 输出</div></div>
+    <div class="kpi"><div class="k">今日花费</div><div class="v" id="u-cost">—</div><div class="f" id="u-week">近 7 天 —</div></div>
+  </div>
+  <div class="card"><b>Key 与计费</b><small>出于安全，这里只显示「是否已配置」，绝不显示密钥内容。</small>
+    <div class="row" style="margin-top:12px"><span class="muted" id="u-key">—</span><span class="muted" id="u-pricing">—</span></div>
+    <p class="hint" id="u-note"></p>
+  </div>
+  <div class="card"><b>近 7 天</b><div id="u-chart" style="margin-top:12px"></div></div>
+  <p class="hint" id="u-backend">若显示「后端未接通」，按 R12 指令包给 proxy.py 加 /api/console/usage 即可；流式回复拿不到 usage，会按估算计入并单独标注。</p>
+</section>
+
+<section class="sec" id="s-policy">
+  <h2 class="sec-h">权限与白名单</h2><p class="lede">三种权限模式；白名单只在「自定义权限」下逐个生效。</p>
+  <div class="card"><b>权限模式</b><div class="chips" id="policy-list" style="margin-top:12px"></div><p class="hint" id="policy-tip"></p></div>
+  <div class="card"><b>访客模式实际有的权限</b><small id="visitor-perm"></small></div>
+  <div class="card"><div class="row"><button class="sw" id="sw-safe"></button><span class="muted">旧开关（等价于访客模式；三档请用上面的权限模式）</span></div></div>
+  <h3 style="font-size:13px;margin:24px 0 8px;color:var(--dim)">白名单</h3>
+  <table><thead><tr><th style="width:150px">QQ</th><th style="width:150px">备注</th><th style="width:170px">模式</th><th style="width:80px"></th></tr></thead><tbody id="people"></tbody></table>
+  <div class="row" style="margin-top:12px"><input id="new-qq" placeholder="QQ 号" inputmode="numeric"><input id="new-note" class="note" placeholder="备注（比如：表哥，只聊天）" style="flex:1 1 200px"><select id="new-mode"><option value="owner">主人</option><option value="family">家人</option><option value="visitor" selected>访客</option><option value="quiet">静音</option></select><button class="act" onclick="addPerson()">添加</button></div>
+  <p class="hint">主人＝完全权限；家人＝只聊天、用家人那张卡、自己的记忆；访客＝只聊天、教学生；静音＝只回一句敷衍。</p>
+</section>
+
+<section class="sec" id="s-persona">
+  <h2 class="sec-h">人格卡</h2><p class="lede">三套完全分开：QQ 和桌面共用主人卡，访客/家人各自独立。原始 AGENT.md 不动。</p>
+  <div class="tabs"><button class="act on" id="tab-owner" onclick="personaTab('owner')">主人卡</button><button class="act" id="tab-visitor" onclick="personaTab('visitor')">访客卡</button><button class="act" id="tab-family" onclick="personaTab('family')">家人卡</button></div>
+  <div id="pane-owner"><div class="chips" id="pc-list"></div><textarea id="pc-text" spellcheck="false"></textarea><div class="row" style="margin-top:12px"><input id="pc-new" placeholder="新卡名字"><button class="act" onclick="savePersona('owner')">保存这张</button><button class="act" onclick="newPersona('owner')">另存为新卡</button><button class="act" onclick="usePersona('owner')">设为当前</button><button class="act del" onclick="delPersona('owner')">删除</button><span class="hint" id="pc-tip"></span></div></div>
+  <div id="pane-visitor" hidden><div class="chips" id="vp-list"></div><textarea id="vp-text" spellcheck="false"></textarea><div class="row" style="margin-top:12px"><input id="vp-new" placeholder="新访客卡名字"><button class="act" onclick="savePersona('visitor')">保存这张</button><button class="act" onclick="newPersona('visitor')">另存为新卡</button><button class="act" onclick="usePersona('visitor')">设为当前</button><button class="act del" onclick="delPersona('visitor')">删除</button><span class="hint" id="vp-tip"></span></div></div>
+  <div id="pane-family" hidden><div class="chips" id="fp-list"></div><textarea id="fp-text" spellcheck="false"></textarea><div class="row" style="margin-top:12px"><input id="fp-new" placeholder="新家人卡名字"><button class="act" onclick="savePersona('family')">保存这张</button><button class="act" onclick="newPersona('family')">另存为新卡</button><button class="act" onclick="usePersona('family')">设为当前</button><button class="act del" onclick="delPersona('family')">删除</button><span class="hint" id="fp-tip"></span></div></div>
+  <p class="hint">改完点「保存这张」立刻生效；硬规矩写在代码里，改卡也绕不过去。</p>
+</section>
+
+<section class="sec" id="s-qq">
+  <h2 class="sec-h">QQ 与联动</h2><p class="lede">账号、好友申请，以及已验证过的联动链路说明。</p>
+  <div class="card"><div class="row"><div style="flex:1"><b id="qq-acc">未连上</b><small id="qq-tip"></small></div><button class="act" onclick="load()">刷新</button></div></div>
+  <div id="qq-pending" style="margin-top:12px"></div>
+  <p class="hint">好友申请走 SnowLuma 的事件；点「同意」才通过，通过的一律登记成访客，不继承主人权限。</p>
+  <details style="margin-top:24px"><summary>QQ 联动现状（已验证记录）</summary><p class="hint" style="margin-top:12px">已接通：QQ → 大脑 → 桌宠。8787 每次处理 QQ 请求会把 thinking / working / idle 写进桌宠在 tail 的桥日志，桌宠的 [dsh] 监视器收到就换状态、换动作。反向「桌宠说话进 QQ」仍无通道，要接 OneBot send_msg。桌宠是 PyInstaller 冻结包，手写 agent_link.custom_agents 它不认；8787 已改独占绑定，避免多个代理抢同一端口。</p></details>
+</section>
+  <section class="sec" id="s-emotion">
+    <iframe id="em-frame" title="情绪状态" style="width:100%;height:calc(100vh - 118px);border:0;display:block"></iframe>
+  </section>
+  <section class="sec" id="s-todo">
+    <h2 class="sec-h">待办提醒</h2>
+    <p class="lede">这里是大脑的提醒清单，和「到点发 QQ」用的是同一份数据。桌宠那边是它自己的待办本，不共享。</p>
+    <div class="card">
+      <div class="row"><b style="flex:1">待发提醒</b><span class="muted" id="todo-count">—</span></div>
+      <div id="todo-list" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="row"><b style="flex:1">新增一条</b></div>
+      <div class="grid2" style="margin-top:12px">
+        <div class="card" style="margin:0"><div class="row"><span style="flex:1;font-size:13px">内容</span></div><input id="todo-msg" placeholder="例：交作业" style="width:100%;margin-top:8px"></div>
+        <div class="card" style="margin:0"><div class="row"><span style="flex:1;font-size:13px">到点时间</span></div><input id="todo-at" type="datetime-local" style="width:100%;margin-top:8px"></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="act" onclick="addTodo()">挂上</button><span class="hint" id="todo-tip">到点会发 QQ；这里是同一份清单的另一个入口。</span></div>
+    </div>
+  </section>
+  <section class="sec" id="s-diary">
+    <h2 class="sec-h">日记</h2>
+    <p class="lede">她每天 23:50 自己写一段，只往后追加、从不改写。这是她的私人记录，不放进事实池，也不参与压缩。</p>
+    <div class="card">
+      <div class="row"><b style="flex:1">她的日记</b><span class="muted" id="diary-count">—</span><button class="act" onclick="loadDiary()">刷新</button></div>
+      <div id="diary-list" style="margin-top:12px"></div>
+      <div class="row" style="margin-top:2px"><button class="act" id="diary-more" onclick="diaryMore()" hidden>再看早一些</button></div>
+    </div>
+  </section>
+</main></div></div>
+<div id="toast"></div>
+<script>
+let state=null, curId="", vId="", fId="";
+const MODE_TXT={owner:"主人",family:"家人",visitor:"访客",quiet:"静音"};
+const POLICY_TXT={visitor:"访客模式",owner:"主人模式",custom:"自定义权限"};
+const POLICY_DESC={visitor:"白名单外的人，和名单里标了「访客」的人，一律只聊天：用访客那张卡和备课笔记，不能动手、不能看屏幕、不碰记忆、不同步桌面。",owner:"谁进来都当主人：全部模块、长期记忆、看屏幕、桌面同步都开（名单里标成家人/静音的人除外）。只适合自己一个人玩。",custom:"按白名单逐个来：主人=全权限，访客=只聊天，静音=只回一句。没在名单上的人按访客处理。"};
+const PET_SWITCHES=[
+ ["即时生效 · 对话与记忆",[["chat_memory_enabled","聊天记忆","bool"],["chat_memory_auto_extract","自动摘要","bool"],["system_notifications_enabled","系统通知","bool"],["file_interpret.enabled","文件解读","bool"],["agent_link.dsh","DSH 联动","bool"]]],
+ ["即时生效 · 陪伴与提醒",[["dynamic_island.enabled","动态岛","bool"],["weather_enabled","天气","bool"],["weather_city","天气城市","text"],["divination_enabled","每日抽签","bool"],["todo_reminder_enabled","待办提醒","bool"],["todo_reminder_lead_minutes","提前分钟","num"],["festival_reminder_enabled","节日节气","bool"],["menu_easter_egg.enabled","菜单彩蛋","bool"],["voice_chime_enabled","报时语音","bool"],["chat_reply_voice_enabled","回复语音","bool"]]],
+ ["即时生效 · 音乐与看屏",[["music_sing_enabled","跟唱","bool"],["music_lyric_enabled","歌词显示","bool"],["music_browser_media_enabled","浏览器媒体","bool"],["foobar_lyrics_enabled","foobar 歌词","bool"],["agent_cost_enabled","花费统计","bool"],["balance_refresh_minutes","余额刷新(分)","num"],["proactive_screen.enabled","主动看屏","bool"]]],
+ ["即时生效 · 身体与窗口",[["slingshot_enabled","投石索","bool"],["lock_position","锁定位置","bool"],["no_move","禁止移动","bool"],["auto_hide_fullscreen","全屏自动隐藏","bool"],["edge_probe_enabled","边缘探测","bool"],["network_probe_interval_seconds","网速采样(秒)","num"]]],
+ ["重启桌宠后才生效",[["stream_capture_mode","直播串流","bool"],["allow_cross_screen","跨屏","bool"],["autostart_wanted","开机自启","bool"]]]
+];
+let petCfg=null;
+const VISITOR_PERM="能：纯文字聊天（访客卡+备课笔记+他自己之前聊过的摘要），发表情，消息里的图片会一并送上。不能：开程序、读文件、看屏幕、长期记忆、学说话、动作标记、桌面同步、语音、看主人的任何资料。他的摘要单独存在 student-memory.json，和主人记忆不互通。";
+const PB={owner:["pc-text","pc-new","pc-tip"],visitor:["vp-text","vp-new","vp-tip"],family:["fp-text","fp-new","fp-tip"]};
+const SECTIONS={overview:["总览","控制台 / 总览"],launch:["开程序","控制台 / 开程序"],pet:["桌宠与鱼搭子","控制台 / 桌宠与鱼搭子"],modules:["模块开关","控制台 / 模块开关"],usage:["用量与消耗","控制台 / 用量与消耗"],policy:["权限与白名单","控制台 / 权限与白名单"],persona:["人格卡","控制台 / 人格卡"],qq:["QQ 与联动","控制台 / QQ 与联动"],emotion:["情绪状态","控制台 / 情绪状态"],todo:["待办提醒","控制台 / 待办提醒"],diary:["日记","控制台 / 日记"]};
+const HAND_KEYS=[["on","挂件总开关"],["voice","挂件语音"],["max_tokens","单次上限"],["history_turns","历史轮数"],["sub_seconds","字幕秒数"],["sub_lines","字幕行数"],["frame_max","抓帧上限"],["frame_min_gap","补帧最小间隔"],["frame_per_hour","每小时抓帧上限"],["frame_hash_gap","画面相似度阈值"],["frame_reuse","旧图复用秒数"],["frame_resend_gap","同图重发间隔"]];
+let handsReply=null;
+const $=id=>document.getElementById(id);
+function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),1600);}
+async function api(path,body){const r=await fetch(path,body?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}:{});const j=await r.json();if(!j.ok)throw new Error(j.error||"失败");return j;}
+async function safeApi(path,body){try{return await api(path,body);}catch(e){return null;}}
+function fmtTokens(v){if(!Number.isFinite(v)||v<=0)return "0";return Math.round(v).toLocaleString("zh-CN");}
+function fmtCny(v){if(!Number.isFinite(v)||v<=0)return "¥0";if(v>=1000)return "¥"+Math.round(v).toLocaleString("zh-CN");if(v>=0.01)return "¥"+v.toFixed(2);if(v>=0.001)return "¥"+v.toFixed(3);return "<¥0.001";}
+function showSection(id){const s=SECTIONS[id];if(!s)return;document.querySelectorAll(".sec").forEach(e=>e.classList.toggle("on",e.id==="s-"+id));document.querySelectorAll(".nav").forEach(e=>e.classList.toggle("active",e.dataset.s===id));$("crumb").textContent=s[0];$("crumb-path").textContent=s[1];try{localStorage.setItem("dfy-sec",id);}catch(e){}const f=$("em-frame");if(f&&id==="emotion"&&!f.getAttribute("src"))f.src="/emotion?embed=1";if(id==="diary")loadDiary();}
+/* ---- 日记：只读，来自 core/diary.py 的 paragraphs() ---- */
+let DIARY=[],DIARY_SHOWN=30;
+function escHtml(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+async function loadDiary(){
+  const el=$("diary-list");if(!el)return;
+  el.innerHTML='<div class="diary-empty">读取中…</div>';
+  const j=await safeApi("/api/console/diary");
+  if(!j){el.innerHTML='<div class="diary-empty">读不到日记：大脑服务（8787）没起，或者 core/diary.py 没装进去。</div>';$("diary-count").textContent="—";return;}
+  DIARY=j.items||[];DIARY_SHOWN=30;
+  $("diary-count").textContent=(DIARY.length?DIARY.length+" 段":"0 段");
+  renderDiary();
+}
+function renderDiary(){
+  const el=$("diary-list");if(!el)return;
+  if(!DIARY.length){el.innerHTML='<div class="diary-empty">还没有日记。她每天 23:50 会自己写一段。</div>';$("diary-more").hidden=true;return;}
+  el.innerHTML=DIARY.slice(0,DIARY_SHOWN).map(it=>{
+    const body=String(it.body||""),kw=String(it.kw||"").trim();
+    return '<div class="diary-item"'+(kw?' title="检索关键词：'+escHtml(kw)+'"':'')+'>'
+      +'<div class="d-day"><b>'+escHtml(it.date||"")+'</b>'+(it.time?'<em>'+escHtml(it.time)+'</em>':'')
+      +'<span style="flex:1"></span><em>'+body.length+' 字</em></div>'
+      +'<p>'+escHtml(body)+'</p></div>';
+  }).join("");
+  const more=$("diary-more");
+  more.hidden=DIARY.length<=DIARY_SHOWN;
+  more.textContent="再看早一些（还剩 "+(DIARY.length-DIARY_SHOWN)+" 段）";
+}
+function diaryMore(){DIARY_SHOWN+=30;renderDiary();}
+function setTheme(){const h=document.documentElement;const n=h.getAttribute("data-theme")==="dark"?"light":"dark";h.setAttribute("data-theme",n);$("theme-tip").textContent="当前："+(n==="dark"?"深色":"浅色");try{localStorage.setItem("dfy-theme",n);}catch(e){}}
+function personaTab(k){["owner","visitor","family"].forEach(x=>{$("pane-"+x).hidden=x!==k;$("tab-"+x).classList.toggle("on",x===k);});}
+function box(scope){return PB[scope]||PB.owner;}
+function pid(scope){return scope==="visitor"?vId:(scope==="family"?fId:curId);}
+function setPid(scope,id){if(scope==="visitor")vId=id;else if(scope==="family")fId=id;else curId=id;}
+function renderLaunch(st){const ap=st.apps||{},pet=st.pet||{};const defs=[["brain","小宠物链路","SnowLuma → AstrBot → QQ",ap.snow&&ap.astr&&ap.qq],["pet","桌宠","桌面那只",!!(pet.running||pet.online)],["fish","鱼搭子挂件","8777 / 8778",!!ap.fish]];
+ $("launch-cards").innerHTML=defs.map(d=>'<div class="card"><b>'+d[1]+'</b><small>'+d[2]+'</small><div class="row" style="margin-top:12px"><span class="muted">'+(d[3]?"在跑":"没开")+'</span><button class="act" style="margin-left:auto" onclick="launch(\''+d[0]+'\',true)">开启</button><button class="act del" onclick="launch(\''+d[0]+'\',false)">关闭</button></div></div>').join("");
+ const dots=[["SnowLuma",ap.snow],["AstrBot",ap.astr],["QQ",ap.qq],["桌宠",ap.pet]].map(x=>'<i class="'+(x[1]?"up":"")+'">'+x[0]+'</i>').join("");
+ $("launch-tip").innerHTML=dots;$("launch-tip2").innerHTML=dots;
+ $("fish-run").textContent=ap.fish?"挂件在跑":"挂件没开";
+ const h=st.hands||{},apf=!!ap.fish;$("hands-live").textContent="本体进程："+(apf?"在跑":"没开")+" · 桥 8777："+(h["起没起"]!==false?"已监听":"未装")+" · 回话口 8778："+(handsReply===null?"未知":(handsReply?"通":"不通"))+" · 游戏 "+(h["游戏"]===true?"开":(h["游戏"]===false?"关":"—"))+(h["心情"]?" · 心情 "+h["心情"].mode+" / joy "+h["心情"].joy:"");
+ $("ov-hands").textContent="鱼搭子挂件："+(ap.fish?"在跑":"未启动")+" · "+(h["口子"]?("口子 "+h["口子"]):"桥未装");
+}
+function renderModules(st){const g={core:"核心",ability:"能力",qq:"QQ"};const by={};(st.modules||[]).forEach(m=>{const k=g[m.kind]||"其它";(by[k]=by[k]||[]).push(m);});
+ $("modules").innerHTML=Object.keys(by).map(k=>'<h3 style="font-size:13px;color:var(--dim);margin:16px 0 8px">'+k+'</h3><div class="grid2">'+by[k].map(m=>'<div class="card" style="margin:0"><div class="row"><div style="flex:1"><b>'+m.name+'</b><small>'+(m.desc||"")+'</small></div><button class="sw '+(m.on?"on":"")+'" onclick="toggleModule(\''+m.id+'\','+(!m.on)+')"></button></div></div>').join("")+"</div>").join("");}
+function petGet(c,k){return k.split(".").reduce((o,x)=>(o&&typeof o==="object")?o[x]:undefined,c||{});}
+function renderPetFeats(){
+ if(!petCfg){$("pet-feats").innerHTML='<p class="hint">桌宠配置读取中。若一直是这样，先启动一次桌宠让它生成 config.json（或把备份的配置放回 %APPDATA%）。</p>';return;}
+ const ae=document.activeElement;
+ if(ae&&ae.tagName==="INPUT"&&ae.closest&&ae.closest("#pet-feats"))return;
+ const keep=[...document.querySelectorAll("#pet-feats>details")].map(d=>!!d.open);
+ const c=petCfg.config||{},missing=[];
+ $("pet-feats").innerHTML=PET_SWITCHES.map((g,gi)=>'<details'+((keep.length?keep[gi]:gi===0)?' open':'')+'><summary>'+g[0]+'</summary><div class="grid2">'+g[1].map(it=>{
+  const k=it[0],lab=it[1],t=it[2],v=petGet(c,k);if(v===undefined)missing.push(k);
+  const id="pet-"+k.replace(/\./g,"-");
+  const ctl=t==="bool"
+    ?'<button class="sw '+(v?"on":"")+'" onclick="setPet(\''+k+'\','+(!v)+')"></button>'
+    :'<input style="width:90px" type="'+(t==="num"?"number":"text")+'" id="'+id+'" value="'+(v===undefined?"":String(v).replace(/"/g,"&quot;"))+'"><button class="act" onclick="setPetVal(\''+k+'\')">存</button>';
+  return '<div class="card" style="margin:0"><div class="row"><div style="flex:1"><b>'+lab+'</b><small>'+k+'</small></div>'+ctl+'</div></div>';
+ }).join("")+'</div></details>').join("")
+ +'<p class="hint" style="margin-top:12px">'+(petCfg.exists?"配置："+petCfg.path:"配置文件尚不存在，首次写入会自动创建")+(missing.length?" · 以下键在配置里还没有值（用默认值）："+missing.join("、 "):"")+'</p>';
+}
+async function loadPet(){const j=await safeApi("/api/console/pet");petCfg=(j&&j.ok)?j:null;renderPetFeats();}
+async function setPet(k,v){const j=await safeApi("/api/console/pet",{key:k,value:v});if(!j)return toast("写入失败：桌宠配置不可写或后端未接通");petCfg=j;renderPetFeats();toast(k+" -> "+(typeof v==="boolean"?(v?"开":"关"):"已存"));}
+async function setPetVal(k){const el=$("pet-"+k.replace(/\./g,"-"));if(!el)return;const v=el.type==="number"?Number(el.value):el.value;if(el.type==="number"&&(!Number.isFinite(v)||v<0))return toast("填个非负数");await setPet(k,v);}
+function render(){
+ const st=state;if(!st)return;
+ $("st-proxy").textContent=st.master.enabled?"代理在线 · 全部功能 开":"代理在线 · 全部功能 已关停";
+ $("st-people").textContent=(POLICY_TXT[st.safemode.policy||"visitor"])+" · "+st.people.filter(p=>p.mode==="owner").length+" 主 / "+st.people.length+" 人";
+ $("st-pet").textContent=(st.pet.running||st.pet.online)?(st.pet.online?"桌宠 在跑:" + st.pet.port:"桌宠 在跑"):"桌宠 没开";
+ $("ov-master").textContent=st.master.enabled?"开":"关";
+ $("ov-people").textContent=st.people.length+" 人";
+ $("ov-pet").textContent=(st.pet.running||st.pet.online)?"在跑":"没开";
+ const swm=$("sw-master");swm.classList.toggle("on",st.master.enabled);swm.title=st.master.enabled?"点一下关停全部功能":"点一下恢复全部功能";
+ const sws=$("sw-safe");sws.classList.toggle("on",st.safemode.enabled);sws.title=st.safemode.enabled?"等价访客模式":"不等价访客模式";
+ renderLaunch(st);renderModules(st);renderPetFeats();renderTodo(st);
+ const pol=st.safemode.policy||"visitor";
+ $("policy-list").innerHTML=(st.safemode.policies||["visitor","owner","custom"]).map(p=>'<button class="act '+(p===pol?"on":"")+'" onclick="setPolicy(\''+p+'\')">'+POLICY_TXT[p]+"</button>").join("");
+ $("policy-tip").textContent="现在："+POLICY_TXT[pol]+" —— "+POLICY_DESC[pol];
+ $("visitor-perm").textContent=VISITOR_PERM;
+ const q=st.qq||{};$("qq-acc").textContent=(q.account&&q.account.uin)?("QQ "+q.account.uin+" "+(q.account.nick||"")):"没连上 OneBot";
+ $("qq-tip").textContent=(q.ws?"事件连接正常":"事件连接断了，等它重连")+" · 收到事件 "+(q.events||0)+" 条"+(q.last?" · "+q.last:"");
+ const pend=q.pending||[];
+ $("qq-pending").innerHTML=pend.length?'<table><tbody>'+pend.map(p=>'<tr><td>'+p.uid+'</td><td>'+((p.nick||p.comment||"").replace(/</g,"&lt;"))+'</td><td>'+p.t+'</td><td><button class="act" onclick="fr(\'approve\',\''+p.flag+'\')">同意（访客）</button> <button class="act del" onclick="fr(\'reject\',\''+p.flag+'\')">拒绝</button></td></tr>').join("")+'</tbody></table>':'<p class="hint">没有待处理的好友申请。</p>';
+ const vp=st.persona.visitor||{active:"",cards:[]},fp=st.persona.family||{active:"",cards:[]};
+ if(!curId)curId=st.persona.active;if(!vId)vId=vp.active;if(!fId)fId=fp.active;
+ $("pc-list").innerHTML=st.persona.cards.map(c=>'<button class="act '+(c.id===curId?"on":"")+'" onclick="openPersona(\''+c.id+'\',\'owner\')">'+c.name+(c.id===st.persona.active?" · 当前":"")+" ("+c.size+"字)</button>").join("");
+ $("pc-tip").textContent="正在编辑："+curId+(curId===st.persona.active?"（当前生效）":"（未生效）");
+ $("vp-list").innerHTML=vp.cards.map(c=>'<button class="act '+(c.id===vId?"on":"")+'" onclick="openPersona(\''+c.id+'\',\'visitor\')">'+c.name+(c.id===vp.active?" · 当前":"")+" ("+c.size+"字)</button>").join("");
+ $("vp-tip").textContent="正在编辑："+vId+(vId===vp.active?"（当前生效）":"（未生效）");
+ $("fp-list").innerHTML=fp.cards.map(c=>'<button class="act '+(c.id===fId?"on":"")+'" onclick="openPersona(\''+c.id+'\',\'family\')">'+c.name+(c.id===fp.active?" · 当前":"")+" ("+c.size+"字)</button>").join("");
+ $("fp-tip").textContent="正在编辑："+fId+(fId===fp.active?"（当前生效）":"（未生效）");
+ $("people").innerHTML=st.people.length?st.people.map(p=>'<tr><td>'+p.qq+'</td><td><input value="'+(p.note||"").replace(/"/g,"&quot;")+'" onchange="editNote(\''+p.qq+'\',this.value)"></td><td><select onchange="editMode(\''+p.qq+'\',this.value)">'+["owner","family","visitor","quiet"].map(m=>'<option value="'+m+'" '+(p.mode===m?"selected":"")+'>'+MODE_TXT[m]+"</option>").join("")+'</select></td><td><button class="act del" onclick="delPerson(\''+p.qq+'\')">删除</button></td></tr>').join(""):'<tr><td colspan="4" style="color:var(--dim)">还没有人</td></tr>';
+ renderAlerts(st);
+}
+function fmtLeft(sec){if(sec<0)return "已过 "+Math.round(-sec/60)+" 分钟";if(sec<60)return "不到 1 分钟";if(sec<3600)return Math.round(sec/60)+" 分钟后";if(sec<86400)return Math.round(sec/3600)+" 小时后";return Math.round(sec/86400)+" 天后";}
+function renderTodo(st){const el=$("todo-list");if(!el)return;const t=st.todo||{};const its=t.items||[];$("todo-count").textContent=t.ok?(its.length+" 条待发"):(t.error||"reminder 未加载");el.innerHTML=its.length?'<table><tbody>'+its.map(i=>'<tr><td>'+String(i.message||"").replace(/</g,"&lt;")+'</td><td>'+new Date(i.at*1000).toLocaleString("zh-CN")+'</td><td>'+fmtLeft(i.left)+'</td><td><button class="act" onclick="cancelTodo(&quot;'+String(i.id||"")+'&quot;)">取消</button></td></tr>').join("")+'</tbody></table>':'<p class="hint">没有待发的提醒。下面可以新增一条。</p>';}
+async function addTodo(){const msg=$("todo-msg").value.trim(),atv=$("todo-at").value;if(!msg)return toast("内容不能空");if(!atv)return toast("选个到点时间");const at=new Date(atv).getTime()/1000;if(!Number.isFinite(at))return toast("时间格式不对");if(at<=Date.now()/1000)return toast("时间要晚于现在");const j=await safeApi("/api/console/todo",{do:"add",message:msg,at:at});if(!j)return toast("后端未接通");if(!j.ok)return toast(j.error||"没挂上");$("todo-msg").value="";$("todo-at").value="";toast("挂上了");load();}
+async function cancelTodo(id){const j=await safeApi("/api/console/todo",{do:"cancel",id});if(!j)return toast("后端未接通");toast(j.ok?"取消了":"没找到");load();}
+function renderAlerts(st){const ap=st.apps||{},q=st.qq||{},a=[];if(!ap.astr)a.push(["AstrBot 未连接，QQ 通道会走不通","launch"]);if(!ap.snow)a.push(["SnowLuma 未启动，QQ 事件进不来","launch"]);if(!ap.qq)a.push(["QQ 没开","launch"]);if(q.ws===false)a.push(["OneBot 事件连接断了","qq"]);if(!st.master.enabled)a.push(["全部功能已关停","overview"]);const el=$("alerts");if(!a.length){el.hidden=true;return;}el.hidden=false;el.innerHTML='<span class="dot"></span><span>'+a.slice(0,2).map(x=>x[0]).join(" · ")+'</span><button class="act" style="margin-left:auto" onclick="showSection(\''+a[0][1]+'\')">去处理</button>';}
+function renderUsage(j){if(!j){$("u-calls").textContent="—";$("u-tokens").textContent="—";$("u-cost").textContent="—";$("u-week").textContent="后端未接通";$("u-key").textContent="密钥状态：—";$("u-pricing").textContent="";$("u-note").textContent="";$("u-chart").innerHTML='<p class="hint">后端未接通：按 R12 指令包给 proxy.py 加 /api/console/usage。</p>';$("ov-usage").textContent="用量：后端未接通";return;}
+ const t=j.today||{},w=j.window7d||{};$("u-calls").textContent=fmtTokens(t.calls||0);$("u-tokens").textContent=fmtTokens(t.totalTokens||0);$("u-tokens-f").textContent="输入 "+fmtTokens(t.promptTokens||0)+" / 输出 "+fmtTokens(t.completionTokens||0)+" · 缓存命中 "+fmtTokens(t.cachedTokens||0);
+ $("u-cost").textContent=fmtCny(t.costCny||0);$("u-week").textContent="近 7 天 "+fmtCny(w.costCny||0);
+ $("u-key").textContent="密钥状态："+(j.keyConfigured?"已配置（内容不显示）":"未配置");$("u-pricing").textContent=j.pricingConfigured?"单价表已配置":"单价表未配置，金额为估算";
+ $("u-note").textContent=(t.unpricedTokens?("今日有 "+fmtTokens(t.unpricedTokens)+" 个未定价 token 未计入金额；"):"")+"流式回复拿不到 usage，按估算计入并单独标注。";
+ const days=j.days||[];const mx=Math.max(1,...days.map(d=>d.totalTokens||0));$("u-chart").innerHTML=days.length?days.map(d=>'<div style="margin-bottom:8px"><div class="row" style="font-size:12px"><span>'+String(d.day||"").slice(5)+'</span><span style="margin-left:auto;color:var(--dim)">'+fmtTokens(d.totalTokens||0)+' tokens · '+fmtCny(d.costCny||0)+'</span></div><div class="bar"><i style="width:'+Math.round((d.totalTokens||0)/mx*100)+'%"></i></div></div>').join(""):'<p class="hint">还没有用量记录。</p>';
+ $("ov-usage").textContent="用量：今日 "+fmtTokens(t.totalTokens||0)+" tokens · "+fmtCny(t.costCny||0);}
+function renderHands(j){if(!j||!j.config){$("hands-sw").innerHTML='<p class="hint">后端 /api/console/hands 未接通，仅显示状态。</p>';$("hands-num").innerHTML="";$("hands-tip").textContent="只有游戏模式可即时切换；其余项需改 hands.json 并重启大脑服务 proxy.py。";return;}
+ const c=j.config;handsReply=("replyPort" in j)?!!j.replyPort:null;
+ const g=!!c.game;$("hands-sw").innerHTML='<div class="card" style="margin:0 0 8px"><div class="row"><div style="flex:1"><b>游戏模式</b><small>game · 唯一可即时生效的开关</small></div><button class="sw '+(g?"on":"")+'" onclick="toggleHand(\'game\','+(!g)+')"></button></div></div>';
+ $("hands-num").innerHTML='<div class="grid2">'+HAND_KEYS.map(x=>'<div class="card" style="margin:0"><div class="row"><span style="flex:1;font-size:13px">'+x[1]+'</span><span class="muted" style="font-size:12px">'+x[0]+' = '+String(c[x[0]]!==undefined?c[x[0]]:"(默认)")+'</span></div></div>').join("")+'</div>';
+ $("hands-tip").textContent=j.restartHint||"只有游戏模式可即时切换；其余项需改 hands.json 并重启大脑服务 proxy.py（重启鱼搭子 exe 无效）。";
+ if(handsReply!==null){const el=$("hands-live");el.textContent=el.textContent.replace(/回话口 8778：[^·]*/,"回话口 8778："+(handsReply?"通":"不通"));}
+}
+async function toggleHand(k,v){if(k!=="game")return toast("该项需重启大脑服务才能改");const j=await safeApi("/api/console/hands",{key:k,value:v});if(!j)return toast("后端未接通，未写入");toast("游戏模式 -> "+(v?"开":"关"));loadExtra();}
+async function loadExtra(){const u=await safeApi("/api/console/usage");loadPet();renderUsage(u&&u.ok?u:null);const h=await safeApi("/api/console/hands");renderHands(h&&h.ok?h:null);}
+function packGuide(kind){
+  var cfg = window.__cfgPaths || {};
+  var head = "# 小宠物 · 接入指引（" + (kind === "existing" ? "已有环境 / 代码对账" : "零基础从零接入") + "）\n\n"
+    + "> 本项目是基于开源桌宠二次开发的 AI 宠物系统。桌面挂件来自 Yuuyuko-uu/dsh-fish-buddy（许可 1.2，禁止称自研、必须保留署名）；"
+    + "中间层 proxy.py 是自研 OpenAI 兼容网关。\n\n";
+  var lines = [head];
+  if(kind === "existing"){
+    lines.push(
+      "## 适用对象",
+      "已经装过 AstrBot / SnowLuma / QQ，或之前移植过这个项目的部分代码、还因 bug 自行改过。\n",
+      "## 给接入 AI 的第一句话",
+      "~~~text",
+      "请读本包根目录的 README-AI.md，然后运行 对账工具/三方对账.py（参数是我的代码目录），",
+      "读它产出的 对账报告.md，按第五节建议顺序做事。先只出对账报告，不要动手改。",
+      "~~~\n",
+      "## 前置条件",
+      "- Windows 10/11；Python 3.12（建议用 AstrBot 自带解释器）；已装 QQ。",
+      "- 已装 AstrBot 4.29.1 portable、SnowLuma 2.1.1（QQ 协议层）。\n",
+      "## 接入流程",
+      "1. 解压本包到任意目录（建议 D 盘根目录，路径别带中文）。",
+      "2. 打开 config-paths.json，把 17 个路径改成你这台电脑的实际位置；没有的程序先留空。",
+      "3. 把 key 填进 key.txt（百炼 sk-ws- 或 DeepSeek sk-），不要写进配置文件。",
+      "4. 按「代码对账要点」让接入 AI 先对账，确认缺什么、改过什么。",
+      "5. 对账通过后再启动 start-stack.bat，观察 8787 / 6185 / 3000 三个端口。\n",
+      "## 文件说明",
+      "| 文件 | 作用 |",
+      "|---|---|",
+      "| proxy.py | 主网关，8787，拼人设/记忆/权限/防抖，是核心 |",
+      "| config-paths.json | 17 个外部程序的路径，唯一需要按本机改的文件 |",
+      "| key.txt | 模型密钥，自己填，绝不进配置、绝不发给别人 |",
+      "| console.html | 浏览器控制台，可看状态/开关 |",
+      "| core/ services/ tools/ | 记忆/情绪/提醒/工具脚本 |",
+      "| voice_call.py | 语音通话（默认关，关闭零开销） |",
+      "| README-AI.md | 给接入 AI 看的总说明 |",
+      "| 对账工具/ | 三方对账脚本 + 基线 + 使用说明，朋友改过代码时先跑它 |\n",
+      "## 代码对账要点（关键）",
+      "朋友常出现「移植了一半 + 自己改过 bug」的情况，接手 AI 必须按下面顺序对账：",
+      "1. 先备份再对比：把对方现有代码整份复制一份，别在原件上比对。",
+      "2. 比文件清单：本包根目录 + core/services/tools 的文件名，与对方逐一对，缺的标出来。",
+      "3. 比版本锚点（本版修过的真 bug）：proxy.py 应有 _paths() 函数和 17 个 _p() 调用；"
+        + "bili_browse.py 里 _bp() 定义必须在 PET 之前（否则 NameError）；"
+        + "FISH_EXE 不能依赖 FISH_DIR 的定义顺序。",
+      "4. 比敏感信息：对方代码里若还有本机 QQ 号、群号、key 明文、C:\\Users\\用户名，"
+        + "本版已全部清除，要逐项清掉再合并。",
+      "5. 看改动意图：对方自行改过的文件，先用 diff -u 看改了什么、为什么改；"
+        + "可能是在修真 bug，不要直接覆盖，先问清或看注释再决定保留还是回退。",
+      "6. 只补缺的：把缺失文件补进去、路径配置按本机改好，能跑最小闭环就先停，"
+        + "不要在没跑通前一次性覆盖全部文件。\n",
+      "## 常见问题",
+      "- 控制台显示后端未接通：proxy.py 没起，或浏览器开的不是 8787。",
+      "- 改了配置不生效：config-paths.json 只在启动时读一次，改完要重启 proxy.py。",
+      "- QQ 没反应：SnowLuma 的 hook 没注进 QQ.exe。全杀 QQ.exe，等 8 秒重开。",
+      "- 提示找不到 Python：config-paths.json 里 astrbot_py 填错了，要指向 AstrBot 自带 python.exe。\n",
+      "## 注意事项",
+      "- 本包不含 AstrBot / SnowLuma / QQ / 桌宠 / 鱼搭子本体，这些要自己装。",
+      "- 桌面挂件是开源派生版，保留原作者署名，不要说成自研。",
+      "- key 与聊天记录属于隐私，不要随包转发。"
+    );
+  }else{
+    lines.push(
+      "## 适用对象",
+      "零基础、从没装过 AstrBot / QQ，想从头搭一套。按顺序做，每步都有验证方法。\n",
+      "## 前置条件",
+      "- Windows 10/11，能上网；一个 QQ 号；一个模型 API key（百炼或 DeepSeek）。",
+      "- 建议 D 盘至少 2 GB 空间（AstrBot + SnowLuma + Python 运行时）。\n",
+      "## 分步接入",
+      "**第 1 步 · 装 QQ 与协议层 SnowLuma**",
+      "- QQ 客户端：从 https://im.qq.com/pcqq/ 下载安装并登录。",
+      "- SnowLuma / NapCat 类协议端（把 QQ 消息转成 OneBot 事件）：",
+      "  参考 https://github.com/NapNeko/NapCatQQ-Desktop ；若用 SnowLuma 便携包，直接用包内 node.exe 启动。",
+      "- 验证：浏览器访问 http://127.0.0.1:3000 或 5099 有响应。\n",
+      "**第 2 步 · 装 AstrBot**",
+      "- 发布页：https://github.com/AstrBotDevs/AstrBot",
+      "- 下载 Windows portable 版，解压到 D 盘（如 D:\\AstrBot），用自带 python 启动 main.py。",
+      "- 验证：浏览器打开 http://127.0.0.1:6185 能看到管理界面。\n",
+      "**第 3 步 · 在 AstrBot 里接 QQ**",
+      "- WebUI → 平台/机器人，添加 OneBot V11 适配器，WS 地址填 ws://127.0.0.1:6199。",
+      "- provider 里加一个 OpenAI 兼容端点，Base URL 填 http://127.0.0.1:8787/qq/v1。",
+      "- 验证：QQ 私聊机器人发「在吗」，能收到回复。\n",
+      "**第 4 步 · 配本包**",
+      "- 解压本包到 D:\\pet-shared（或任意目录），改 config-paths.json 的 17 个路径指向实际位置。",
+      "- 把 key 写进 key.txt。",
+      "- 启动 start-stack.bat（按顺序拉起 proxy → SnowLuma → AstrBot → QQ）。",
+      "- 验证：http://127.0.0.1:8787/health 返回 200。\n",
+      "**第 5 步 · 桌面挂件（可选）**",
+      "- 桌宠 dsh-pet 与鱼搭子属于可选项，先跑通文字对话再加。\n",
+      "## 文件说明",
+      "与入口一相同：重点看 config-paths.json、key.txt、start-stack.bat。\n",
+      "## 常见问题",
+      "- 6185 打不开：AstrBot 没启动，或用了系统 Python 缺依赖——必须用 AstrBot 自带 python。",
+      "- QQ 收不到消息：SnowLuma hook 没注进 QQ.exe；全杀 QQ.exe 重开。",
+      "- 提示找不到 dsh.cmd：没装 DSH CLI，属可选项，可先把 dsh_cmd 留空。\n",
+      "## 注意事项",
+      "- 安装顺序不能反：先 QQ 和协议层，再 AstrBot，最后本包。",
+      "- 全程只用 D 盘，别放 C 盘中文路径。",
+      "- key 与聊天记录是隐私，不要发给别人。"
+    );
+  }
+  return lines.join("\n");
+}
+
+async function genGuide(kind){
+  try{
+    var j = await safeApi("/api/console/state");
+    window.__cfgPaths = (j && j.paths) || {};
+  }catch(e){ window.__cfgPaths = {}; }
+  $("guide-text").value = packGuide(kind);
+  $("guide-out").hidden = false;
+  $("guide-text").scrollTop = 0;
+  toast("已生成指引，可复制");
+}
+function copyGuide(){
+  var t = $("guide-text");
+  t.select();
+  try{ document.execCommand("copy"); toast("已复制"); }
+  catch(e){ toast("复制失败，请手动选中"); }
+}
+async function runProbe(){
+  var j = await safeApi("/api/console/probe", {});
+  if(!j) return toast("探测失败，后端可能未接通");
+  var rows = Object.keys(j.probe || {}).map(function(k){
+    var it = j.probe[k];
+    return k + ": " + (it.found ? "已找到 " + it.path : "未找到");
+  });
+  $("guide-text").value = "本机环境探测结果\n\n" + rows.join("\n");
+  $("guide-out").hidden = false;
+  $("guide-text").scrollTop = 0;
+  toast("探测完成");
+}
+
+async function load(){state=await api("/api/console/state");render();loadExtra();
+ if(curId){const j=await api("/api/console/persona?id="+encodeURIComponent(curId)+"&scope=owner");if($("pc-text")!==document.activeElement||!$("pc-text").value)$("pc-text").value=j.text;}
+ if(vId){const j=await api("/api/console/persona?id="+encodeURIComponent(vId)+"&scope=visitor");if($("vp-text")!==document.activeElement||!$("vp-text").value)$("vp-text").value=j.text;}
+ if(fId){const j=await api("/api/console/persona?id="+encodeURIComponent(fId)+"&scope=family");if($("fp-text")!==document.activeElement||!$("fp-text").value)$("fp-text").value=j.text;}}
+async function openPersona(id,scope){setPid(scope,id);render();const j=await api("/api/console/persona?id="+encodeURIComponent(id)+"&scope="+scope);$(box(scope)[0]).value=j.text;}
+async function savePersona(scope){const id=pid(scope);await api("/api/console/persona",{do:"save",id,text:$(box(scope)[0]).value,scope});toast("已保存 "+id);load();}
+async function usePersona(scope){const id=pid(scope);await api("/api/console/persona",{do:"active",id,scope});toast("现在用这张："+id);load();}
+async function newPersona(scope){const name=$(box(scope)[1]).value.trim();if(!name)return toast("先给新卡起个名");const id=name.replace(/[^0-9A-Za-z_\u4e00-\u9fa5-]/g,"")||("card"+Date.now());await api("/api/console/persona",{do:"new",id,text:$(box(scope)[0]).value||("# "+name+"\n\n"),scope});setPid(scope,id);$(box(scope)[1]).value="";toast("新建了 "+id);load();}
+async function delPersona(scope){const id=pid(scope);if(!confirm("删掉这张人格卡 "+id+"？"))return;await api("/api/console/persona",{do:"del",id,scope});setPid(scope,"");toast("删掉了");load();}
+async function launch(what,on){try{const j=await api("/api/console/launch",{what,on});const n=j.started||[];toast(n.length?((on?"已开：":"已关：")+n.join("、")):(on?"本来就在跑":"本来就没开"));}catch(e){toast(e.message);}load();}
+async function toggleModule(id,on){await api("/api/console/module",{id,on});toast((on?"打开 ":"关掉 ")+id);load();}
+async function setMaster(on){await api("/api/console/master",{enabled:on});toast(on?"全部功能已开启":"全部功能已关停");load();}
+async function setSafe(on){await api("/api/console/safemode",{enabled:on});toast(on?"陌生人限制：开":"陌生人限制：关");load();}
+async function setPolicy(p){await api("/api/console/policy",{policy:p});toast("权限模式："+POLICY_TXT[p]);load();}
+async function addPerson(){const qq=$("new-qq").value.trim(),note=$("new-note").value.trim(),mode=$("new-mode").value;if(!/^\d{5,12}$/.test(qq))return toast("QQ 号填对一下");await api("/api/console/person",{action:"add",qq,note,mode});$("new-qq").value="";$("new-note").value="";toast("加好了");load();}
+async function delPerson(qq){if(!confirm("从白名单删掉 "+qq+"？"))return;await api("/api/console/person",{action:"del",qq});toast("删掉了");load();}
+async function editNote(qq,note){await api("/api/console/person",{action:"note",qq,note});toast("备注已存");}
+async function editMode(qq,mode){await api("/api/console/person",{action:"mode",qq,mode});toast("模式："+MODE_TXT[mode]);load();}
+async function quick(on){await api("/api/console/quick",{on});toast(on?"开好了，全部功能＋主人模式":"都停了");load();}
+async function fr(act,flag){await api("/api/console/friend",{do:act,flag});toast(act==="approve"?"同意了，已按访客登记":"拒绝了");load();}
+$("sw-master").onclick=()=>setMaster(!state.master.enabled);
+$("sw-safe").onclick=()=>setSafe(!state.safemode.enabled);
+document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>showSection(b.dataset.s));
+try{const t=localStorage.getItem("dfy-theme");if(t){document.documentElement.setAttribute("data-theme",t);$("theme-tip").textContent="当前："+(t==="dark"?"深色":"浅色");}const s=localStorage.getItem("dfy-sec");if(s&&SECTIONS[s])showSection(s);}catch(e){}
+load().catch(e=>{$("st-proxy").textContent="连不上代理";});
+setInterval(()=>load().catch(()=>{}),5000);
+</script></body></html>

@@ -1,0 +1,117 @@
+{
+  "master": true,
+  "modules": [
+    {
+      "id": "chat",
+      "name": "对话",
+      "desc": "QQ / 桌面正常回话",
+      "kind": "core",
+      "on": true
+    },
+    {
+      "id": "motion",
+      "name": "表情动作",
+      "desc": "回话带【wave】等标记，桌面那只真的动",
+      "kind": "core",
+      "on": true
+    },
+    {
+      "id": "voice",
+      "name": "语音",
+      "desc": "带 [[v]] 的那句念成语音发到 QQ",
+      "kind": "core",
+      "on": true
+    },
+    {
+      "id": "mirror",
+      "name": "桌面同步",
+      "desc": "QQ 说的话同步到桌面身体",
+      "kind": "core",
+      "on": true
+    },
+    {
+      "id": "learn",
+      "name": "学习",
+      "desc": "偷学主人说话习惯，聊够 8 轮开始像他",
+      "kind": "ability",
+      "on": true
+    },
+    {
+      "id": "longterm",
+      "name": "长期记忆",
+      "desc": "记住主人的事，聊到相关的事会想起来",
+      "kind": "ability",
+      "on": true
+    },
+    {
+      "id": "vision",
+      "name": "看屏幕",
+      "desc": "按需截屏看主人在干什么",
+      "kind": "ability",
+      "on": true
+    },
+    {
+      "id": "video",
+      "name": "看视频",
+      "desc": "陪主人看完视频后记得内容，聊到会想起来",
+      "kind": "ability",
+      "on": true
+    },
+    {
+      "id": "qq_friend",
+      "name": "好友申请",
+      "desc": "新好友申请进控制台，点同意才通过，一律访客",
+      "kind": "qq",
+      "on": true
+    },
+    {
+      "id": "qq_collect",
+      "name": "收藏图片",
+      "desc": "主人发的图自动收进表情库并打标签",
+      "kind": "qq",
+      "on": true
+    },
+    {
+      "id": "heart",
+      "name": "心情",
+      "desc": "被夸会开心、被凶会委屈，低落时说话变拘谨（只改语气，不写记忆）",
+      "kind": "ability",
+      "on": true
+    },
+    {
+      "id": "emotion",
+      "name": "情绪状态",
+      "desc": "九维心情接管语气，低落时说话变拘谨；关掉后不再注入提示词",
+      "kind": "ability",
+      "on": true
+    },
+    {
+      "id": "voice_call",
+      "name": "语音通话（高消耗）",
+      "desc": "网页语音通话；默认关闭，关闭时零资源占用",
+      "kind": "ability",
+      "on": false
+    },
+    {
+      "id": "bili",
+      "name": "B站",
+      "desc": "认 B 站链接和 BV 号，看视频讲内容",
+      "kind": "ability",
+      "on": true
+    },
+    {
+      "id": "bili_browse",
+      "name": "B站自动翻阅",
+      "desc": "打开后按首页推荐流自己翻视频，关掉立刻停；默认关闭",
+      "kind": "ability",
+      "on": false
+    },
+    {
+      "id": "bili_comment",
+      "name": "B站评论",
+      "desc": "允许它在 B 站发评论；默认关闭，且每次要你当场同意",
+      "kind": "ability",
+      "on": false
+    }
+  ]
+}
