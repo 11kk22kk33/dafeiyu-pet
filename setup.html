@@ -292,6 +292,7 @@
       '<textarea id="bat" readonly>' + esc(bat) + "</textarea>" +
       '<div class="row"><button class="big ghost" type="button" onclick="copyBat()">复制这段文字</button></div>' +
       msgBox() +
+      '<div id="pw"></div>' +
       '<div class="note">向导进度存在本机浏览器里，刷新不会丢；全部做完可以关掉这个页面。</div>' +
       '<div class="nav"><button type="button" onclick="go(5)">← 上一步</button><button type="button" onclick="reset()">重新走一遍</button></div>';
   }
@@ -309,6 +310,25 @@
     var body = [step1, step2, step3, step4, step5][S.step - 1]();
     if (S.step === 6) body = donePage();
     $("app").innerHTML = body;
+    if (S.step === 6) setTimeout(pathWarn, 80);
+  }
+
+  // 完成页兜底：所有外部程序都探测不到，说明第三步压根没保存过路径。
+  // 安装包用户最容易漏这步——程序能开，但控制台一片灰，看起来像"装了个空壳"。
+  function pathWarn(){
+    http("GET", "/api/console/probe", null).then(function(j){
+      var p = j && j.probe;
+      if (!p) return;
+      var total = 0, miss = 0;
+      for (var k in p) {
+        if (p[k] && typeof p[k].found === "boolean") { total++; if (!p[k].found) miss++; }
+      }
+      var el = $("pw");
+      if (!el || !total || miss < total) return;
+      el.innerHTML = '<div class="note" style="border:1px solid #d94a76;background:#fff5f8;color:#8e2739">' +
+        "<b>路径还没配。</b>从安装包装的人最容易漏这一步：程序能开，但 AstrBot / QQ / 协议层一个都连不上，" +
+        "控制台会是一整片灰。点下面「← 上一步」退到第三步，点一次「保存路径」再回来。" + "</div>";
+    });
   }
 
   function dlRepo(){
