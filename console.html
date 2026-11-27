@@ -126,11 +126,11 @@ summary{cursor:pointer;font-size:13px;font-weight:500}
 <section class="sec" id="s-launch">
   <h2 class="sec-h">开程序</h2><p class="lede">三个独立进程：大脑链路 / 桌宠 / 鱼搭子挂件。这里只管启停。</p>
 <div class="card" id="onboard-card">
-  <b>高级：生成接入指引文本</b>
-  <small>给已有环境的人用；零基础请双击 setup.html 走安装向导。</small>
+  <b>缺东西？让 AI 帮你补</b>
+  <small>① 给装过、改过代码的人做对账；② 先体检本机，生成一份可直接发给 AI 的补齐委托（代码地图 + 缺失清单 + 补齐办法）。</small>
   <div class="row" style="margin-top:12px">
     <button class="act" onclick="genGuide('existing')">① 我已装过 AstrBot / QQ，代码可能改过</button>
-    <button class="act" onclick="genGuide('fresh')">② 我零基础，从没装过</button>
+    <button class="act" onclick="genAuditGuide()">② 环境不全 → 体检并生成补齐提示词</button>
     <button class="act" onclick="runProbe()">探测本机环境</button>
   </div>
   <div id="guide-out" style="margin-top:12px" hidden>
@@ -437,45 +437,6 @@ function packGuide(kind){
       "- 桌面挂件是开源派生版，保留原作者署名，不要说成自研。",
       "- key 与聊天记录属于隐私，不要随包转发。"
     );
-  }else{
-    lines.push(
-      "## 适用对象",
-      "零基础、从没装过 AstrBot / QQ，想从头搭一套。按顺序做，每步都有验证方法。\n",
-      "## 前置条件",
-      "- Windows 10/11，能上网；一个 QQ 号；一个模型 API key（百炼或 DeepSeek）。",
-      "- 建议 D 盘至少 2 GB 空间（AstrBot + SnowLuma + Python 运行时）。\n",
-      "## 分步接入",
-      "**第 1 步 · 装 QQ 与协议层 SnowLuma**",
-      "- QQ 客户端：从 https://im.qq.com/pcqq/ 下载安装并登录。",
-      "- SnowLuma / NapCat 类协议端（把 QQ 消息转成 OneBot 事件）：",
-      "  参考 https://github.com/NapNeko/NapCatQQ-Desktop ；若用 SnowLuma 便携包，直接用包内 node.exe 启动。",
-      "- 验证：浏览器访问 http://127.0.0.1:3000 或 5099 有响应。\n",
-      "**第 2 步 · 装 AstrBot**",
-      "- 发布页：https://github.com/AstrBotDevs/AstrBot",
-      "- 下载 Windows portable 版，解压到 D 盘（如 D:\\AstrBot），用自带 python 启动 main.py。",
-      "- 验证：浏览器打开 http://127.0.0.1:6185 能看到管理界面。\n",
-      "**第 3 步 · 在 AstrBot 里接 QQ**",
-      "- WebUI → 平台/机器人，添加 OneBot V11 适配器，WS 地址填 ws://127.0.0.1:6199。",
-      "- provider 里加一个 OpenAI 兼容端点，Base URL 填 http://127.0.0.1:8787/qq/v1。",
-      "- 验证：QQ 私聊机器人发「在吗」，能收到回复。\n",
-      "**第 4 步 · 配本包**",
-      "- 解压本包到 D:\\pet-shared（或任意目录），改 config-paths.json 的 17 个路径指向实际位置。",
-      "- 把 key 写进 key.txt。",
-      "- 启动 start-stack.bat（按顺序拉起 proxy → SnowLuma → AstrBot → QQ）。",
-      "- 验证：http://127.0.0.1:8787/health 返回 200。\n",
-      "**第 5 步 · 桌面挂件（可选）**",
-      "- 桌宠 dsh-pet 与鱼搭子属于可选项，先跑通文字对话再加。\n",
-      "## 文件说明",
-      "与入口一相同：重点看 config-paths.json、key.txt、start-stack.bat。\n",
-      "## 常见问题",
-      "- 6185 打不开：AstrBot 没启动，或用了系统 Python 缺依赖——必须用 AstrBot 自带 python。",
-      "- QQ 收不到消息：SnowLuma hook 没注进 QQ.exe；全杀 QQ.exe 重开。",
-      "- 提示找不到 dsh.cmd：没装 DSH CLI，属可选项，可先把 dsh_cmd 留空。\n",
-      "## 注意事项",
-      "- 安装顺序不能反：先 QQ 和协议层，再 AstrBot，最后本包。",
-      "- 全程只用 D 盘，别放 C 盘中文路径。",
-      "- key 与聊天记录是隐私，不要发给别人。"
-    );
   }
   return lines.join("\n");
 }
@@ -489,6 +450,107 @@ async function genGuide(kind){
   $("guide-out").hidden = false;
   $("guide-text").scrollTop = 0;
   toast("已生成指引，可复制");
+}
+var DEP_PROBE = {"AstrBot":["astrbot_app","astrbot_py"],"SnowLuma / NapCat":["snow_dir"],"QQ 客户端":["qq_exe"],"桌宠 dsh-pet":["pet_exe"],"鱼搭子挂件":["fish_dir","fish_exe"]};
+var DEP_TIP = {
+  "AstrBot": {url:"https://github.com/AstrBotDevs/AstrBot/releases", keys:"astrbot_app、astrbot_py", how:"下 Windows portable 版，解压到 D:\\AstrBot（路径不带中文和空格），用包里 backend\\python\\python.exe 启动 backend\\app\\main.py。别用系统 Python，依赖不全起不来。"},
+  "SnowLuma / NapCat": {url:"https://github.com/NapNeko/NapCatQQ-Desktop", keys:"snow_dir、snow_config", how:"非商业许可，只能本人下载。解压到 D:\\SnowLuma，用它自带的 node.exe 跑 index.mjs，起来后 3000 端口应有响应。"},
+  "QQ 客户端": {url:"https://im.qq.com/pcqq/", keys:"qq_exe", how:"装完自己登录。协议层要把 hook 注进 QQ.exe，注入失败就全杀 QQ.exe、等 8 秒重开。"},
+  "桌宠 dsh-pet": {url:"", keys:"pet_exe", how:"可选。没有它 QQ 文字对话照常，只是没有桌面形象。"},
+  "鱼搭子挂件": {url:"https://github.com/Yuuyuko-uu/dsh-fish-buddy", keys:"fish_dir、fish_exe", how:"可选，开源派生版，不得称自研、要保留原作者署名。"}
+};
+var PORT_NAME = [["proxy",8787,"proxy.py 自身"],["astrbot",6185,"AstrBot"],["snowluma",3000,"SnowLuma"]];
+function depFound(name, probe){
+  var ks = DEP_PROBE[name] || [];
+  for (var i = 0; i < ks.length; i++) { if (probe[ks[i]] && probe[ks[i]].found) return probe[ks[i]].path || true; }
+  return false;
+}
+async function genAuditGuide(){
+  var j = await safeApi("/api/console/audit", {});
+  if (!j || !j.ok || !j.audit) { toast("体检失败：后端可能还是旧版，重启 proxy.py 再试"); return; }
+  var a = j.audit, p = a.probe || {}, ports = a.ports || {}, L = [];
+
+  L.push("# 委托：帮我把「AI 宠物（大肥鱼）」缺的部分补齐");
+  L.push("");
+  L.push("我在 Windows 上跑一个 QQ AI 宠物项目。下面是程序刚在本机跑完体检得到的真实结果，请当成事实，不要重新假设环境。");
+  L.push("");
+  L.push("## 一、这套代码各自在干什么");
+  L.push("");
+  L.push("根目录：`" + a.base + "`，自带 " + a.count + " 个文件。");
+  L.push("");
+  L.push("| 文件 | 类别 | 行数 | 职责 |");
+  L.push("|---|---|---|---|");
+  a.code.forEach(function(c){ L.push("| `" + c.file + "` | " + c.tag + " | " + (c.lines || "-") + " | " + c.role + " |"); });
+  L.push("");
+  L.push("最小闭环，缺一环都断：");
+  L.push("");
+  L.push("~~~text");
+  L.push("QQ 客户端 → SnowLuma/NapCat(3000) → AstrBot(6185) → proxy.py(8787) → 模型 API");
+  L.push("~~~");
+  L.push("");
+  L.push("控制台 `http://127.0.0.1:8787/console` 和向导 `/setup` 都由 `proxy.py` 直接吐页面，不需要额外前端服务。");
+  L.push("");
+  L.push("## 二、体检结果：缺什么");
+  L.push("");
+  L.push("### 2.1 外部程序（包里不带，必须单独装）");
+  a.deps.forEach(function(d){
+    var hit = depFound(d.name, p);
+    L.push("- " + (hit ? "✅ 已找到：" + hit : "❌ 缺失") + " **" + d.name + "**（" + (d.port === "-" ? "无端口" : "端口 " + d.port) + "）— " + d.why);
+  });
+  L.push("");
+  L.push("### 2.2 自带代码");
+  if (a.missing_code && a.missing_code.length) {
+    L.push("- 缺 " + a.missing_code.length + " 个：`" + a.missing_code.join("`、`") + "`");
+  } else {
+    L.push("- " + a.count + " 个文件全部齐全。");
+  }
+  L.push("");
+  L.push("### 2.3 端口");
+  PORT_NAME.forEach(function(x){ L.push("- " + (ports[x[0]] ? "✅ 在听" : "❌ 没在听") + "：" + x[1] + "（" + x[2] + "）"); });
+  L.push("");
+  L.push("### 2.4 路径配置");
+  var miss = [];
+  Object.keys(p).forEach(function(k){ if (!p[k].found) miss.push(k); });
+  L.push(miss.length ? "- 没探测到：" + miss.join("、") : "- 全部探测到。");
+  L.push("");
+  L.push("## 三、请你补齐");
+  L.push("");
+  L.push("**执行规则**");
+  L.push("1. 能直接做就直接做：写文件、改配置、给可复制的完整命令，不要只说「建议安装」。");
+  L.push("2. 装外部程序的，给下载地址 + 装完要填的 `config-paths.json` 键名 + 一条验证命令。");
+  L.push("3. 必须本人操作的（登录 QQ、扫码、许可受限的软件），单独标 `【需要本人操作】`，并给最短步骤。");
+  L.push("4. 每补完一项，给一句怎么验证它真的好了。");
+  L.push("");
+  L.push("### 3.1 外部程序");
+  a.deps.forEach(function(d){
+    var hit = depFound(d.name, p);
+    if (hit) { L.push("- ✅ **" + d.name + "** 已就位，跳过。"); return; }
+    var t = DEP_TIP[d.name] || {};
+    L.push("- ❌ **" + d.name + "** — " + d.why);
+    if (t.url) L.push("  - 下载：" + t.url);
+    if (t.how) L.push("  - 做法：" + t.how);
+    if (t.keys) L.push("  - 装完在向导第三步填：" + t.keys);
+  });
+  L.push("");
+  L.push("### 3.2 自带代码");
+  if (a.missing_code && a.missing_code.length) {
+    L.push("- 把 " + a.missing_code.join("、") + " 从仓库 https://github.com/11kk22kk33/dafeiyu-pet 取回，放回 `" + a.base + "` 对应位置；或者直接重装一遍安装包。");
+  } else {
+    L.push("- 不需要补，代码是完整的。缺的只可能是外部程序和配置。");
+  }
+  L.push("");
+  L.push("### 3.3 拉起来验证");
+  L.push("1. 起网关：双击 `" + a.base + "\\启动.bat`，然后 `http://127.0.0.1:8787/health` 应返回 200。");
+  L.push("2. 起 AstrBot 后 `http://127.0.0.1:6185` 应能打开管理界面。");
+  L.push("3. QQ 私聊机器人发「在吗」，30 秒内应有回复。");
+  L.push("4. 打开 `http://127.0.0.1:8787/console`，看「在线状态」是否全绿。");
+  L.push("");
+  L.push("补完后回到控制台「开程序」再点一次体检，确认缺失项清零。");
+
+  $("guide-text").value = L.join("\n");
+  $("guide-out").hidden = false;
+  $("guide-text").scrollTop = 0;
+  toast("体检完成，已生成委托");
 }
 function copyGuide(){
   var t = $("guide-text");
