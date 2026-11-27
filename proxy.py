@@ -87,6 +87,102 @@ def _p(key, fallback):
     return v if isinstance(v, str) and v.strip() else fallback
 
 
+# ── 自带代码地图：供「体检 → 生成补齐提示词」使用（文件, 类别, 职责）──────────
+CODE_MAP = [
+    ("proxy.py", "核心", "8787 网关：收 QQ/桌宠/控制台请求，拼人设+记忆+权限+情绪，转发模型再回写"),
+    ("console.html", "界面", "控制台：总览/开程序/模块/人格/情绪/待办/日记"),
+    ("setup.html", "界面", "首次配置向导：5 步，只写 config-paths.json 和 key.txt"),
+    ("emotion.html", "界面", "情绪面板，可被控制台内嵌"),
+    ("launcher.py", "入口", "启动器：单实例锁 → 起 proxy → 等 /health → 按 key+路径决定进向导还是控制台"),
+    ("core/memory.py", "记忆", "记忆池：profile 固定事实 / recall 相关旧事 / recent_events 近几天"),
+    ("core/emotion.py", "情绪", "八维情绪数值与衰减，人格与界面共用"),
+    ("core/diary.py", "记忆", "日记读写与分段解析：夜间脚本写、控制台读"),
+    ("core/reminder.py", "功能", "待办提醒，到点推送"),
+    ("core/guard.py", "安全", "白名单与权限：主人/家人/访客/静音四档"),
+    ("core/hands.py", "功能", "桌面挂件（鱼搭子）状态与即时开关"),
+    ("core/tts.py", "功能", "语音合成封装，关闭时零开销"),
+    ("core/bus.py", "基础", "进程内事件总线"),
+    ("core/adapter.py", "基础", "模型接口适配（OpenAI 兼容）"),
+    ("core/poollock.py", "基础", "记忆池并发写锁"),
+    ("services/qq_service.py", "链路", "QQ 链路管理：SnowLuma → AstrBot → QQ 的启停与探活"),
+    ("services/pet_service.py", "链路", "桌宠进程管理"),
+    ("qqops.py", "链路", "QQ 侧操作：发消息、群管理"),
+    ("vision.py", "能力", "图片理解（看屏幕/识图）"),
+    ("voice_call.py", "能力", "语音通话，默认关"),
+    ("sticker.py", "能力", "表情包库与抽取"),
+    ("learn.py", "能力", "学说话（人格微调）"),
+    ("reach.py", "能力", "主动触达（隔段时间主动说话）"),
+    ("bili_browse.py", "扩展", "B 站浏览（可选）"),
+    ("bili_fetch.py", "扩展", "B 站抓取（可选）"),
+    ("bili_login.py", "扩展", "B 站登录（可选）"),
+    ("sheet.py", "扩展", "表格读写"),
+    ("desktop_app.py", "入口", "桌面壳（可选）"),
+    ("tts_edge.py", "功能", "edge-tts 实现"),
+    ("pet_qq_only.py", "入口", "纯 QQ 模式启动（不带桌宠）"),
+    ("modules.json", "配置", "模块开关白名单，控制台可改"),
+    ("persona.md", "配置", "主人格卡"),
+    ("config-paths.example.json", "配置", "外部路径模板"),
+    ("启动.bat", "入口", "一键拉起全栈"),
+    ("tools/diary_nightly.py", "维护", "夜间写日记（计划任务调用）"),
+    ("tools/compress_memory.py", "维护", "记忆压缩/事实抽取"),
+    ("tools/dedupe_events.py", "维护", "事件去重"),
+    ("tools/tidy_memory.py", "维护", "记忆整理"),
+    ("tools/clean_pool.py", "维护", "记忆池清理"),
+    ("tools/build_char_assets.py", "维护", "角色素材压缩（webp）"),
+]
+
+EXTERNAL_DEPS = [
+    ("AstrBot", "6185", "QQ 消息接入框架，必须用它自带的 python 启动"),
+    ("SnowLuma / NapCat", "3000", "QQ 协议层，把 QQ 消息转成 OneBot 事件；有非商业许可，不随包分发"),
+    ("QQ 客户端", "-", "QQ 本体，需要本人在自己的登录态下运行"),
+    ("桌宠 dsh-pet", "-", "桌面宠物 exe，可选"),
+    ("鱼搭子挂件", "8777", "桌面挂件 exe，可选"),
+]
+
+
+def audit_self():
+    """体检：自带代码是否齐全、外部依赖路径、关键端口。纯只读，不写任何文件。"""
+    import socket as _sock
+
+    rows = []
+    for rel, tag, role in CODE_MAP:
+        p = os.path.join(BASE, rel)
+        ok = os.path.exists(p)
+        n = 0
+        if ok:
+            try:
+                with open(p, "r", encoding="utf-8", errors="replace") as fh:
+                    n = sum(1 for _ in fh)
+            except OSError:
+                n = 0
+        rows.append({"file": rel, "tag": tag, "role": role, "exists": ok, "lines": n})
+
+    def _up(port):
+        if not port:
+            return False
+        s = _sock.socket()
+        s.settimeout(0.35)
+        try:
+            return s.connect_ex(("127.0.0.1", int(port))) == 0
+        except (OSError, ValueError):
+            return False
+        finally:
+            try:
+                s.close()
+            except OSError:
+                pass
+
+    return {
+        "base": BASE,
+        "code": rows,
+        "count": len(rows),
+        "missing_code": [r["file"] for r in rows if not r["exists"]],
+        "ports": {"proxy": _up(8787), "astrbot": _up(6185), "snowluma": _up(3000)},
+        "probe": probe_paths(),
+        "deps": [{"name": a, "port": b, "why": c} for a, b, c in EXTERNAL_DEPS],
+    }
+
+
 def probe_paths():
     """扫本机常见安装位置，返回每项路径 + 是否存在。只读，不写任何文件。"""
     candidates = {
@@ -2966,14 +3062,21 @@ def apps_state():
             "fish": _proc_running(FISH_PROC)}
 
 
+_BRAIN_START = {"ts": 0.0}
+
+
 def launch_brain():
     """缺哪样补哪样：SnowLuma -> AstrBot -> QQ。脑子（proxy）本身就是控制台，不用启。"""
     started = []
+    # AstrBot 要 40 秒以上才 bind 6185，这段时间 _port_up 全是 false。
+    # 不加冷却的话，连点几次就会起好几个实例抢 sqlite 锁（2026-11-27 实测 7 个）。
+    cooling = time.time() - _BRAIN_START["ts"] < 120
     if not (_port_up(5099) or _port_up(3000)):
         _spawn([os.path.join(SNOW_DIR, "node.exe"), "index.mjs"], SNOW_DIR)
         started.append("SnowLuma")
-    if not _port_up(6185):
+    if not _port_up(6185) and not cooling:
         _spawn([PYD, "main.py"], AB_DIR)
+        _BRAIN_START["ts"] = time.time()
         started.append("AstrBot")
     if not _proc_running("QQ.exe"):
         _shell_open(QQ_EXE)
@@ -4112,6 +4215,9 @@ class Handler(BaseHTTPRequestHandler):
                 vc.handle(self)
             except Exception as exc:
                 self._json(500, {"ok": False, "error": repr(exc)[:120]})
+            return
+        if path == "/api/console/audit":
+            self._json(200, {"ok": True, "audit": audit_self()})
             return
         if path == "/api/console/probe":
             self._json(200, {"ok": True, "probe": probe_paths()})
