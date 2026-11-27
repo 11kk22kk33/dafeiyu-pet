@@ -96,7 +96,7 @@
   "use strict";
   var API = "http://127.0.0.1:8787";
   var STEP_KEY = "dfy-setup-step";
-  var REPO_URL_TODO = "";
+  var REPO_URL = "https://github.com/11kk22kk33/dafeiyu-pet";
   var S = { step: 1, src: "", probe: null, paths: null, saved: "", msgType: "info", msg: "" };
 
   var LABEL = {
@@ -199,13 +199,13 @@
   function step1(){
     return '<h2>第一步：把程序装到 D 盘</h2>' +
       '<p class="lead">源码放 D 盘根目录、路径别带中文和空格，后面能少踩一半的坑。</p>' +
-      '<button class="big" type="button" disabled style="opacity:.45;cursor:not-allowed">从 GitHub 下载（暂未开放）</button>' +
+      '<button class="big" type="button" onclick="dlRepo()">从 GitHub 下载安装包</button>' +
       '<button class="big ghost" type="button" onclick="focusDir()">我已经有源码，选择目录</button>' +
       '<label for="src">源码目录（在资源管理器地址栏复制路径，粘到这里）</label>' +
       '<input type="text" id="src" placeholder="例如 D:\pet-src" value="' + esc(S.src) + '">' +
       '<div class="row"><button class="big" type="button" onclick="saveSrc()">确认源码位置</button></div>' +
       msgBox() +
-      '<div class="note">GitHub 仓库还在整理，按钮暂时点不了。点下面「我已经有源码，选择目录」，把刚解压的文件夹路径粘进来就行——这一步只是记个位置，不影响后面。</div>' +
+      '<div class="note">装好的安装包里已经带了全部主程序代码，不用再下源码。这个按钮是给「手上有旧版、想对一下」的人用的，会打开 GitHub 下载页。已经解压好了就直接点下面，把文件夹路径粘进来。</div>' +
       nav();
   }
 
@@ -332,7 +332,8 @@
   }
 
   function dlRepo(){
-    note("info", "GitHub 仓库还没建好（地址待填）。现在请点第二个按钮，把本地源码目录粘进来。");
+    try { window.open(REPO_URL + "/releases", "_blank"); } catch (e) {}
+    note("info", "已经打开下载页。装包本身自带全部程序代码，只有想要源码对账时才需要下。");
   }
   function focusDir(){ var e = $("src"); if (e) { e.focus(); e.select(); } }
   function saveSrc(){
