@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 宠物 · 安装向导</title>
+<style>
+  :root{
+    --bg:#f4f6fa; --card:#ffffff; --ink:#1d2530; --sub:#5d6b7d;
+    --line:#e3e8f0; --pri:#3d5aa8; --pri-d:#33509b; --ok:#12a06a; --warn:#c9820a; --bad:#d24040;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.65 "Microsoft YaHei","Segoe UI",system-ui,sans-serif}
+  .wrap{max-width:820px;margin:0 auto;padding:28px 20px 64px}
+  .hd{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+  .hd-av{width:64px;height:64px;flex:0 0 auto;display:block}
+  header h1{font-size:22px;margin:0 0 4px}
+  header .sub{color:var(--sub);font-size:13px;margin-bottom:16px}
+  .hd .sub{margin:2px 0 0}
+  .bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+  .bar>i{display:block;height:100%;width:20%;background:var(--pri);transition:width .25s ease}
+  .dots{display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap}
+  .dot{flex:1 1 0;min-width:96px;padding:7px 10px;border-radius:10px;background:#eef2f9;
+    color:var(--sub);font-size:12px;text-align:center;border:1px solid transparent}
+  .dot.on{background:#e7efff;color:var(--pri-d);border-color:#c7dbff;font-weight:600}
+  .dot.done{background:#e8f7f0;color:#0d8055;border-color:#c6ebda}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:26px 24px;margin-top:18px;box-shadow:0 1px 3px rgba(20,40,80,.05)}
+  .card h2{font-size:19px;margin:0 0 6px}
+  .lead{color:var(--sub);margin:0 0 18px}
+  .big{display:block;width:100%;padding:15px 18px;margin:10px 0;border-radius:12px;
+    border:1px solid var(--pri);background:var(--pri);color:#fff;font-size:16px;
+    font-weight:600;cursor:pointer;text-align:center}
+  .big:hover{background:var(--pri-d)}
+  .big.ghost{background:#fff;color:var(--pri-d);border-color:#c7dbff}
+  .big.ghost:hover{background:#f2f6ff}
+  .big:disabled{opacity:.55;cursor:not-allowed}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 0}
+  .row .big{flex:1 1 210px;width:auto}
+  label{display:block;font-size:13px;color:var(--sub);margin:14px 0 6px}
+  input[type=text],input[type=password]{width:100%;padding:11px 12px;border:1px solid var(--line);
+    border-radius:10px;font-size:14px;background:#fbfcfe;color:var(--ink)}
+  input[type=text]:focus,input[type=password]:focus{outline:2px solid #cfe0ff;border-color:#9dc0ff}
+  .pk{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;margin-top:12px}
+  @media(max-width:640px){.pk{grid-template-columns:1fr}}
+  .pk .item{min-width:0}
+  .pk .item b{font-size:12px;font-weight:600;color:#2a3546;display:block}
+  .pk .item span{font-size:11px;color:#8a97a8}
+  .pk input{margin-top:4px;font-size:12px;padding:8px 9px}
+  .pk .item.miss input{border-color:#f0c98a;background:#fffaf0}
+  .list{margin:12px 0 0;border-top:1px solid var(--line)}
+  .list .li{display:flex;justify-content:space-between;gap:12px;padding:9px 2px;
+    border-bottom:1px solid var(--line);font-size:13px}
+  .list .li em{font-style:normal;color:var(--sub);word-break:break-all;margin-right:12px}
+  .tag{font-size:12px;padding:1px 8px;border-radius:99px;white-space:nowrap}
+  .tag.ok{background:#e8f7f0;color:#0d8055}
+  .tag.no{background:#fdeeee;color:#b33030}
+  .msg{margin-top:14px;padding:11px 13px;border-radius:10px;font-size:13px;display:none}
+  .msg.show{display:block}
+  .msg.ok{background:#e8f7f0;color:#0d6f4a;border:1px solid #c6ebda}
+  .msg.err{background:#fdeeee;color:#a92f2f;border:1px solid #f4cfcf}
+  .msg.info{background:#eef4ff;color:#2b4f96;border:1px solid #d5e2ff}
+  textarea{width:100%;min-height:130px;padding:11px;border:1px solid var(--line);
+    border-radius:10px;font:12px/1.6 Consolas,monospace;background:#fbfcfe;color:#26313f}
+  .links a{display:inline-block;margin:8px 14px 0 0;color:var(--pri-d);font-size:14px}
+  .note{margin-top:16px;font-size:12px;color:#8a97a8;line-height:1.7}
+  .nav{display:flex;gap:10px;justify-content:space-between;margin-top:20px}
+  .nav button{padding:9px 16px;border-radius:10px;border:1px solid var(--line);background:#fff;
+    color:var(--sub);cursor:pointer;font-size:13px}
+  .nav button:hover{border-color:#c7dbff;color:var(--pri-d)}
+  .big-ok{font-size:26px;font-weight:700;color:var(--ok);text-align:center;margin:8px 0 4px}
+  .chk{background:#f7fafc;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:14px}
+  .chk div{font-size:14px;padding:5px 0}
+  .need{margin:14px 0 4px;border:1px solid #f0e2c4;background:#fffdf6;border-radius:12px;padding:12px 15px}
+  .need .h{font-size:13px;font-weight:700;color:#8a5c0a;margin-bottom:4px}
+  .need .i{font-size:13px;color:#4a5566;line-height:1.75;padding:3px 0}
+  .need .i b{color:#22304a;font-weight:600}
+  .need .i em{font-style:normal;color:#8a97a8}
+  .need a{color:var(--pri-d);text-decoration:none;border-bottom:1px solid #c7dbff}
+  footer{margin-top:26px;font-size:12px;color:#98a4b4;text-align:center}
+  footer a{color:var(--pri-d);text-decoration:none;border-bottom:1px solid #c7dbff}
+  .picks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 4px}
+  @media(max-width:640px){.picks{grid-template-columns:1fr}}
+  .pc{text-align:left;padding:14px 16px;border-radius:12px;border:1px solid var(--line);
+    background:#fbfcfe;cursor:pointer;font:inherit;color:var(--ink)}
+  .pc:hover{border-color:#c7dbff;background:#f6f9ff}
+  .pc.on{border-color:var(--pri);background:#eef4ff;box-shadow:inset 0 0 0 2px #dce8ff}
+  .pc b{display:block;font-size:15px;margin-bottom:4px}
+  .pc b i{font-style:normal;font-size:11px;font-weight:600;color:#fff;background:var(--pri);
+    border-radius:99px;padding:1px 7px;margin-left:6px;vertical-align:2px}
+  .pc span{display:block;font-size:12px;color:var(--sub);line-height:1.6}
+  .pn{margin-top:16px;border-top:1px solid var(--line);padding-top:16px}
+  .pn h3{font-size:15px;margin:0 0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="hd">
+      <img class="hd-av" src="assets/char/mascot.webp" alt="" onerror="this.style.display='none'">
+      <div>
+        <h1>AI 宠物 · 安装向导</h1>
+        <div class="sub">跟着点，一步一步来，大约 10 分钟。动手前先把下面三样备好；全程有两步必须你自己来：登录小号、填 key。</div>
+      </div>
+    </div>
+    <div class="need">
+      <div class="h">开工前要备好这三样</div>
+      <div class="i"><b>① 一个小号 QQ</b>　这个号是 AI 的「容器」——她绑在这个号上说话、读消息。别填你天天在用的主号：两边会互相顶下线，消息也会串。新注册一个就行。</div>
+      <div class="i"><b>② 一个 API key</b>　模型按量计费，没有 key 她不会思考。第五步要填，只写进 <code>key.txt</code> 一处。</div>
+      <div class="i"><b>③ 一张代金券（建议）</b>　推荐阿里云百炼：在校学生可在「<a href="https://university.aliyun.com" target="_blank" rel="noreferrer">云工开物</a>」领 300 元券；不是学生，<a href="https://bailian.console.aliyun.com/" target="_blank" rel="noreferrer">百炼</a>新用户每个模型也有 100 万 token 免费额度。<em>只是推荐，用别家的 key 一样能跑。</em></div>
+    </div>
+    <div class="dots" id="dots"></div>
+    <div class="bar"><i id="barfill"></i></div>
+  </header>
+  <main id="app" class="card"></main>
+  <footer>本向导只改 config-paths.json 和 key.txt 两个文件，不动源码。　·　<a href="credits.html">鸣谢与许可</a></footer>
+</div>
+<script>
+(function(){
+  "use strict";
+  var API = "http://127.0.0.1:8787";
+  var STEP_KEY = "dfy-setup-step";
+  var REPO_URL = "https://github.com/11kk22kk33/dafeiyu-pet";
+  var S = { step: 1, pick: "", src: "", probe: null, paths: null, saved: "", msgType: "info", msg: "" };
+
+  var LABEL = {
+    qq_exe: ["QQ 主程序", "QQ.exe"],
+    snow_dir: ["协议层目录", "QQ 协议端所在文件夹"],
+    snow_config: ["协议层配置", "一般叫 napcat.json 或 onebot11_*.json"],
+    astrbot_app: ["AstrBot 目录", "AstrBot 主文件夹"],
+    astrbot_py: ["AstrBot 的 python.exe", "别填系统 Python"],
+    astrbot_bin: ["AstrBot 启动器", "bat 或 exe"],
+    astrbot_cmd_config: ["AstrBot 配置", "data/cmd_config.json"],
+    pet_exe: ["桌面宠物主程序", "桌宠本体"],
+    pet_shared: ["共享目录", "宠物和网关交换文件用"],
+    fish_dir: ["鱼搭子目录", "桌面挂件"],
+    fish_exe: ["鱼搭子主程序", "挂件启动 exe"],
+    bili_plugin: ["B 站插件目录", "AstrBot 插件"],
+    bili_data: ["B 站数据目录", "日志/缓存"],
+    story_dir: ["故事目录", "睡前故事素材"],
+    ffprobe: ["ffprobe", "视频抽帧用"],
+    dsh_cmd: ["DSH 命令行", "可留空"],
+    dsh_workdir: ["DSH 工作目录", "可留空"]
+  };
+  var STEP3_KEYS = ["qq_exe","snow_dir","snow_config","astrbot_py","astrbot_app",
+                    "astrbot_bin","astrbot_cmd_config","pet_exe","pet_shared",
+                    "fish_dir","fish_exe","bili_plugin","bili_data","story_dir","ffprobe",
+                    "dsh_cmd","dsh_workdir"];
+  var PROBE_KEYS = ["qq_exe","snow_dir","snow_config","astrbot_py","astrbot_app"];
+
+  function $(id){ return document.getElementById(id); }
+  function esc(v){
+    return String(v == null ? "" : v).replace(/[&<>"]/g, function(c){
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c];
+    });
+  }
+  function labelOf(k){
+    var L = LABEL[k];
+    return L ? L[0] : k;
+  }
+  function hintOf(k){
+    var L = LABEL[k];
+    return L ? L[1] : "";
+  }
+
+  function http(method, path, body){
+    var opt = { method: method, headers: {}, cache: "no-store" };
+    if (body !== null && body !== undefined) {
+      opt.headers["Content-Type"] = "application/json";
+      opt.body = JSON.stringify(body);
+    }
+    var ctl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    var timer = null;
+    if (ctl) {
+      opt.signal = ctl.signal;
+      timer = setTimeout(function(){ try { ctl.abort(); } catch (e) {} }, 20000);
+    }
+    return fetch(API + path, opt).then(function(r){
+      return r.text().then(function(t){
+        var j = null;
+        try { j = JSON.parse(t); } catch (e) { j = null; }
+        if (timer) clearTimeout(timer);
+        if (!r.ok) {
+          return { ok: false, error: (j && j.error) ? j.error : ("后端返回 " + r.status + "，请重启程序再试") };
+        }
+        if (!j) return { ok: false, error: "后端返回的内容看不懂（不是 JSON）" };
+        return j;
+      });
+    }).catch(function(){
+      if (timer) clearTimeout(timer);
+      return { ok: false, error: "连不上程序（127.0.0.1:8787）——程序还没启动。先在源码目录双击 启动.bat（没有这个文件就在命令行里执行 python proxy.py），等浏览器能打开 http://127.0.0.1:8787/console，再回来点一次。" };
+    });
+  }
+
+  function note(type, text){
+    S.msgType = type; S.msg = text;
+    var box = $("msg");
+    if (!box) return;
+    box.className = "msg show " + type;
+    box.textContent = text;
+  }
+  function msgBox(){
+    if (!S.msg) return '<div class="msg" id="msg"></div>';
+    return '<div class="msg show ' + esc(S.msgType) + '" id="msg">' + esc(S.msg) + "</div>";
+  }
+
+  function go(n){
+    if (n < 1) n = 1;
+    if (n > 5) n = 5;
+    S.step = n;
+    S.msg = "";
+    try { localStorage.setItem(STEP_KEY, String(n)); } catch (e) {}
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function nav(){
+    if (S.step <= 1) {
+      return '<div class="nav" style="justify-content:flex-end">' +
+        '<button type="button" onclick="go(2)">下一步 →</button></div>';
+    }
+    return '<div class="nav"><button type="button" onclick="go(' + (S.step - 1) + ')">← 上一步</button>' +
+      '<button type="button" onclick="go(' + (S.step + 1) + ')">下一步 →</button></div>';
+  }
+
+  // ——— 第一步：先选一条路 ———
+  function pickCard(id, title, desc, badge){
+    var on = S.pick === id ? " on" : "";
+    return '<button class="pc' + on + '" type="button" onclick="pick(\'' + id + '\')">' +
+      '<b>' + title + (badge ? '<i>' + badge + '</i>' : '') + '</b><span>' + desc + '</span></button>';
+  }
+  function pick(id){
+    S.pick = (S.pick === id) ? "" : id;
+    S.msg = "";
+    render();
+  }
+  function step1(){
+    var cards = '<div class="picks">' +
+      pickCard("manual", "手动装 · 我自己来",
+        "自己下载、自己填路径，跟着后面几步走。路径清楚、或者旁边有人带的时候选这个。") +
+      pickCard("ai", "让 AI 帮我装",
+        "当场体检，生成一份带本机真实结果的委托，粘给你那个能读盘的 AI，路径让它自己去找。", "推荐") +
+      "</div>";
+    var body = "";
+    if (S.pick === "manual") body = manualPanel();
+    if (S.pick === "ai") body = aiPanel();
+    return '<h2>第一步：先选一条路</h2>' +
+      '<p class="lead">两条路最后到同一个地方。区别只有一个：谁来填那些路径。</p>' +
+      cards + body;
+  }
+  function manualPanel(){
+    return '<div class="pn">' +
+      '<h3>把程序装到 D 盘</h3>' +
+      '<p class="lead" style="margin:0 0 10px">源码放 D 盘根目录、路径别带中文和空格，后面能少踩一半的坑。</p>' +
+      '<button class="big" type="button" onclick="dlRepo()">从 GitHub 下载安装包</button>' +
+      '<div class="row"><button class="big ghost" type="button" onclick="focusDir()">我已经有源码，直接填下面</button></div>' +
+      '<label for="src">源码目录（在资源管理器地址栏复制路径，粘到这里）</label>' +
+      '<input type="text" id="src" placeholder="例如 D:\\AIPet\\app" value="' + esc(S.src) + '">' +
+      '<div class="row"><button class="big" type="button" onclick="saveSrc()">确认源码位置</button></div>' +
+      msgBox() +
+      '<div class="note">装好的安装包里已经带了全部主程序代码，不用再下源码。这个按钮是给「手上有旧版、想对一下」的人用的，会打开 GitHub 下载页。</div>' +
+      nav() + "</div>";
+  }
+  function aiPanel(){
+    return '<div class="pn">' +
+      '<h3>这个入口会做什么</h3>' +
+      '<div class="note" style="margin-top:0">' +
+      "① 当场跑一次体检：自带代码齐不齐、外部程序找没找到、端口通不通、程序自己能扫到的那几项路径有没有找到。<br>" +
+      "② 把结果拼成一份委托，连 17 项路径该填什么一起写进去，逐字可用。<br>" +
+      "③ 你把它粘给能读这台电脑的 AI，它自己扫盘、自己写 <code>config-paths.json</code>。<br>" +
+      "④ 它改完，你回来点一次「做完了，重新检查」。" +
+      "</div>" +
+      '<div class="row"><button class="big" type="button" onclick="genGuide()">生成本机体检委托</button></div>' +
+      msgBox() +
+      '<div id="gd-box" hidden>' +
+      '<label>复制这段，整段粘给 AI</label>' +
+      '<textarea id="gd-text" readonly></textarea>' +
+      '<div class="row">' +
+      '<button class="big" type="button" onclick="copyGuide()">复制全文</button>' +
+      '<button class="big ghost" type="button" onclick="recheck()">做完了，重新检查</button>' +
+      "</div></div>" +
+      '<div id="gd-res"></div>' +
+      '<div class="note">委托里不含 key，也不会让 AI 向你要 key。它只动 <code>config-paths.json</code> 一个文件。' +
+      "两条路不分先后：你也可以先点「下一步」按手动流程走，随时回第一步换另一条。</div>" +
+      nav() + "</div>";
+  }
+
+  // ——— 委托生成：17 项路径键、外部依赖怎么启、能从哪拿 ———
+  var KEYS17 = [
+    ["qq_exe", "QQ 主程序", "文件，一般叫 QQ.exe"],
+    ["snow_dir", "协议层目录", "文件夹，协议层根目录"],
+    ["snow_config", "协议层配置", "文件，一般叫 napcat.json 或 onebot11_*.json"],
+    ["astrbot_app", "AstrBot 目录", "文件夹，AstrBot 主目录"],
+    ["astrbot_py", "AstrBot 的 python.exe", "文件，必须是 AstrBot 自带那份，不能填系统 Python"],
+    ["astrbot_bin", "AstrBot 启动器", "文件，bat 或 exe"],
+    ["astrbot_cmd_config", "AstrBot 配置", "文件，data/cmd_config.json"],
+    ["pet_exe", "桌面宠物主程序", "文件，桌宠 exe（可选）"],
+    ["pet_shared", "共享目录", "文件夹，网关和桌宠交换文件用"],
+    ["fish_dir", "鱼搭子目录", "文件夹（可选）"],
+    ["fish_exe", "鱼搭子主程序", "文件，挂件启动 exe（可选）"],
+    ["bili_plugin", "B 站插件目录", "文件夹，AstrBot 插件"],
+    ["bili_data", "B 站数据目录", "文件夹，日志/缓存"],
+    ["story_dir", "故事目录", "文件夹，睡前故事素材"],
+    ["ffprobe", "ffprobe", "文件 exe，视频抽帧用"],
+    ["dsh_cmd", "DSH 命令行", "文件 dsh.cmd（可留空）"],
+    ["dsh_workdir", "DSH 工作目录", "文件夹（可留空）"]
+  ];
+  var DEP_HOW = {
+    "AstrBot": "解压，双击 AstrBot.exe；首次进 6185 的 WebUI 建一个 QQ 平台适配",
+    "SnowLuma / NapCat": "起后登录小号 QQ，等 OneBot v11 的 HTTP 挂到 3000",
+    "QQ 客户端": "正常装、登小号；协议端要能接管这个客户端",
+    "桌宠 dsh-pet": "可选，只影响桌面那只动不动，不影响收发消息",
+    "鱼搭子挂件": "可选，挂着玩的"
+  };
+  var DEP_URL = {
+    "AstrBot": "https://github.com/AstrBotDevs/AstrBot/releases",
+    "SnowLuma / NapCat": "本项目不提供、不分发（官方已停止公开分发）",
+    "QQ 客户端": "https://im.qq.com/pcqq/"
+  };
+
+  // 想改委托文案只动 GUIDE_TPL，不要动下面的 buildGuide。
+  var GUIDE_TPL = [
+"# 委托：帮我把这台机器上的「AI 宠物」装好",
+"",
+"我在 Windows 上跑一个 QQ AI 宠物项目。下面这段是安装向导在 {{DATE}} 跑完体检拿到的结果（基准目录 `{{BASE}}`），请当成事实，不要重新假设环境。",
+"",
+"## 0. 先确认你能不能读这台电脑的磁盘",
+"",
+"- **能**（你在本机运行，比如 DSH / Cursor / 带文件工具的 agent）：直接按第三节动手。自己扫盘找路径、直接写配置文件，不要反过来问我路径。",
+"- **不能**（网页版对话）：**不要凭空编路径**。只输出一张「每一项目该找什么」的清单，我自己去填。编一个不存在的路径比留空更糟。",
+"",
+"## 1. 这套东西是什么、各自怎么用",
+"",
+"根目录：`{{BASE}}`，自带 {{COUNT}} 个文件。",
+"",
+"| 文件 | 类别 | 行数 | 职责 |",
+"|---|---|---|---|",
+"{{CODE_TABLE}}",
+"",
+"数据怎么走（缺一环就断）：",
+"",
+"~~~text",
+"QQ 客户端 → 协议端(3000) → AstrBot(6185) → proxy.py(8787) → 模型 API",
+"~~~",
+"",
+"`http://127.0.0.1:8787/console`（控制台）和 `/setup`（本向导）都由 `proxy.py` 直接吐页面，不需要额外前端服务。",
+"",
+"## 2. 体检结果：现在缺什么",
+"",
+"### 2.1 外部程序（包里不带，必须单独装）",
+"",
+"| 状态 | 程序 | 端口 | 干什么 | 装完怎么启 |",
+"|---|---|---|---|---|",
+"{{DEPS_TABLE}}",
+"",
+"{{DEPS_NOTE}}",
+"",
+"### 2.2 自带代码",
+"",
+"{{CODE_STAT}}",
+"",
+"### 2.3 端口",
+"",
+"{{PORT_LIST}}",
+"",
+"### 2.4 路径配置：一共 17 项，全部都要确认",
+"",
+"下面这张表是 `config-paths.json` 的**全部键**。只有标「已探测到」的才算确认过；标「程序不探测」的是**程序根本扫不到、只能你自己去找**——不要因为它没出现在缺失列表里就跳过。",
+"",
+"| 键名 | 是什么 | 要什么 | 体检结果 |",
+"|---|---|---|---|",
+"{{PATH_TABLE}}",
+"",
+"{{PATH_SUM}}",
+"",
+"## 3. 请你补齐",
+"",
+"**执行规则**",
+"1. 能直接做就直接做：扫盘、写文件、给完整可复制的命令。不要只说「建议安装」。",
+"2. 外部程序给到：装到哪 + 装完要填的键名 + 一条验证命令。",
+"3. 必须本人操作的（登录 QQ、扫码、已停供的软件）单独标 `【需要本人操作】`，并给最短步骤。",
+"4. 每补完一项，给一句怎么验证它真的好了。",
+"5. **只改 `{{BASE}}\\config-paths.json` 一个文件**，其他任何文件都不要动。不要碰 key.txt，也不要向我索要 key。",
+"",
+"### 3.1 外部程序",
+"",
+"{{DEPS_FIX}}",
+"",
+"### 3.2 路径：写 config-paths.json",
+"",
+"文件位置：`{{BASE}}\\config-paths.json`（没有就新建）。格式（只列三项示意，实际要写全 17 项）：",
+"",
+"~~~json",
+"{{SAMPLE_JSON}}",
+"~~~",
+"",
+"- 值一律是 Windows 绝对路径，JSON 里反斜杠写两个。",
+"- 找不到、又确实不需要的项（比如没装桌宠），留空字符串，不要猜。",
+"- 17 项要逐个交代：要么填上，要么写明为什么可以空。",
+"",
+"### 3.3 拉起来验证",
+"",
+"1. `http://127.0.0.1:8787/health` 返回 200。",
+"2. AstrBot 装好后 `http://127.0.0.1:6185` 能打开管理界面。",
+"3. QQ 私聊机器人发「在吗」，30 秒内应有回复。",
+"4. 打开 `http://127.0.0.1:8787/console`，看「在线状态」是否全绿。",
+"",
+"## 4. 改完怎么交回",
+"",
+"回到向导页 `http://127.0.0.1:8787/setup.html`，点「做完了，重新检查」，程序能扫到的那几项应该全部变绿；剩下「程序不探测」的几项，向导第三步会带你核对一遍。",
+"",
+"最后给我一句话总结：改了哪几项、哪几项留空、还有哪一步必须我自己动手。"
+  ].join("\n");
+
+  var SAMPLE_JSON = [
+    "{",
+    '  "qq_exe": "D:\\\\qq\\\\QQ.exe",',
+    '  "snow_dir": "D:\\\\OneBot",',
+    '  "astrbot_py": "D:\\\\AStrBot\\\\backend\\\\python\\\\python.exe"',
+    "}"
+  ].join("\n");
+
+  function tplFill(tpl, vars){
+    return tpl.replace(/\{\{([A-Z_]+)\}\}/g, function(m, k){
+      return vars[k] === undefined ? m : String(vars[k]);
+    });
+  }
+  function depHit(name, p){
+    var map = {
+      "AstrBot": ["astrbot_py", "astrbot_app"],
+      "SnowLuma / NapCat": ["snow_dir"],
+      "QQ 客户端": ["qq_exe"],
+      "桌宠 dsh-pet": ["pet_exe"],
+      "鱼搭子挂件": ["fish_dir", "fish_exe"]
+    };
+    var ks = map[name] || [];
+    for (var i = 0; i < ks.length; i++) {
+      var it = p[ks[i]];
+      if (it && it.found) return it.path || "已探测到";
+    }
+    return "";
+  }
+  function buildGuide(a){
+    var p = a.probe || {}, ports = a.ports || {}, out = [];
+    var code = a.code || [], deps = a.deps || [], missCode = a.missing_code || [];
+
+    code.forEach(function(c){
+      out.push("| `" + c.file + "` | " + c.tag + " | " + (c.lines || "-") + " | " + c.role + " |");
+    });
+    var codeTable = out.join("\n");
+
+    out = [];
+    deps.forEach(function(d){
+      var hit = depHit(d.name, p);
+      out.push("| " + (hit ? "✅ 已找到" : "❌ 缺失") + " | **" + d.name + "** | " +
+        (d.port === "-" ? "—" : d.port) + " | " + d.why + " | " +
+        (DEP_HOW[d.name] || "—") + " |");
+    });
+    var depsTable = out.join("\n");
+
+    var snowHit = depHit("SnowLuma / NapCat", p);
+    var depsNote = snowHit
+      ? "> **协议端只认本机已有副本。** SnowLuma 于 2026-11-09、NapCatQQ 于 2026-11-12 相继停止公开分发，" +
+        "官方仓库已不可用。这台机器上已经有一份（`" + snowHit + "`），**不要替换、不要升级、不要找新版本**，" +
+        "直接用现有的这一份。"
+      : "> **协议端没有现成下载。** SnowLuma 于 2026-11-09、NapCatQQ 于 2026-11-12 相继停止公开分发，" +
+        "官方仓库已不可用。本项目**不提供、不分发、也不提供下载指引**。" +
+        "如果我手上没有可用副本，这一步做不下去——**不要去找第三方下载站**，直接告诉我卡在这里。";
+
+    out = [];
+    out.push("- " + (ports.proxy ? "✅ 在听" : "❌ 没在听") + "：8787 网关（就是现在吐这个向导的进程）");
+    out.push("- " + (ports.astrbot ? "✅ 在听" : "❌ 没在听") + "：6185 AstrBot");
+    out.push("- " + (ports.snowluma ? "✅ 在听" : "❌ 没在听") + "：3000 协议端");
+    var portList = out.join("\n");
+
+    out = [];
+    var known = 0, unknown = 0, missing = 0;
+    KEYS17.forEach(function(k){
+      var it = p[k[0]], st;
+      if (!it) { st = "程序不探测，需人工确认"; unknown++; }
+      else if (it.found) { st = "已探测到：`" + (it.path || "") + "`"; known++; }
+      else { st = "扫了，没找到"; missing++; }
+      out.push("| `" + k[0] + "` | " + k[1] + " | " + k[2] + " | " + st + " |");
+    });
+    var pathTable = out.join("\n");
+    var pathSum = "**小结**：17 项里 " + known + " 项已确认、" + missing + " 项扫了没找到、" +
+      unknown + " 项程序不探测。" +
+      (unknown ? "那 " + unknown + " 项必须你自己去找，不能因为没报警就当我填好了。" : "");
+
+    var codeStat = missCode.length
+      ? "- 缺 " + missCode.length + " 个：`" + missCode.join("`、`") + "`"
+      : "- " + a.count + " 个文件全部齐全，不用补。";
+
+    out = [];
+    deps.forEach(function(d){
+      var hit = depHit(d.name, p);
+      if (hit) { out.push("- ✅ **" + d.name + "** 已就位，跳过。"); return; }
+      out.push("- ❌ **" + d.name + "** — " + d.why);
+      if (DEP_URL[d.name]) out.push("  - 位置：" + DEP_URL[d.name]);
+    });
+    var depsFix = out.join("\n");
+
+    var d = new Date();
+    var pad = function(n){ return (n < 10 ? "0" : "") + n; };
+    var dateStr = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
+      " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+
+    return tplFill(GUIDE_TPL, {
+      DATE: dateStr,
+      BASE: a.base,
+      COUNT: a.count,
+      CODE_TABLE: codeTable,
+      DEPS_TABLE: depsTable,
+      DEPS_NOTE: depsNote,
+      CODE_STAT: codeStat,
+      PORT_LIST: portList,
+      PATH_TABLE: pathTable,
+      PATH_SUM: pathSum,
+      DEPS_FIX: depsFix,
+      SAMPLE_JSON: SAMPLE_JSON
+    }).replace(/\n{3,}/g, "\n\n");
+  }
+
+  function genGuide(){
+    note("info", "正在体检…");
+    http("GET", "/api/console/audit", null).then(function(j){
+      if (!j || !j.ok || !j.audit) { note("err", (j && j.error) || "体检失败：后端可能是旧版"); return; }
+      var txt = buildGuide(j.audit);
+      S.msgType = "ok"; S.msg = "委托已生成：" + txt.split("\n").length + " 行，整段粘给 AI 就行";
+      render();
+      var b = $("gd-box");
+      if (b) {
+        b.hidden = false;
+        var t = $("gd-text");
+        if (t) { t.value = txt; t.scrollTop = 0; }
+      }
+    });
+  }
+  function copyGuide(){
+    var t = $("gd-text");
+    if (!t) return;
+    var okc = false;
+    try { t.select(); okc = document.execCommand("copy"); } catch (e) { okc = false; }
+    if (!okc && navigator.clipboard) {
+      navigator.clipboard.writeText(t.value).then(function(){ note("ok", "已复制，去粘给 AI"); })
+        .catch(function(){ note("info", "复制没成功，手动全选复制"); });
+      return;
+    }
+    note(okc ? "ok" : "info", okc ? "已复制全文，去粘给 AI" : "复制没成功，手动全选复制");
+  }
+  function recheck(){
+    note("info", "重新体检中…");
+    http("GET", "/api/console/audit", null).then(function(j){
+      if (!j || !j.ok || !j.audit) { note("err", (j && j.error) || "体检失败"); return; }
+      var p = j.audit.probe || {}, rows = "", hit = 0, miss = 0, unk = 0;
+      KEYS17.forEach(function(k){
+        var it = p[k[0]];
+        if (!it) {
+          unk++;
+          rows += '<div>⬜ ' + esc(k[1]) + '　<span style="color:#8a97a8;font-size:12px">' +
+            esc(k[0]) + ' · 程序扫不到，要人工确认</span></div>';
+          return;
+        }
+        if (it.found) {
+          hit++;
+          rows += '<div>✅ ' + esc(k[1]) + '　<span style="color:#8a97a8;font-size:12px">' +
+            esc(k[0]) + '　' + esc(it.path || "") + '</span></div>';
+        } else {
+          miss++;
+          rows += '<div>❌ ' + esc(k[1]) + '　<span style="color:#b33030;font-size:12px">' +
+            esc(k[0]) + ' · 扫了但没找到</span></div>';
+        }
+      });
+      var head = '<b>复检：' + hit + ' 项已确认' +
+        (miss ? '，' + miss + ' 项没找到' : '') +
+        (unk ? '，' + unk + ' 项要人工确认' : '') + '</b>';
+      var tail;
+      if (miss) {
+        tail = '<div class="note">这 ' + miss + ' 项是真没找到。把这几行再丢给 AI，或者干脆重装一遍外部程序。</div>';
+      } else if (unk) {
+        tail = '<div class="note">剩下 ' + unk + ' 项程序本来就扫不到（配置文件名不固定、插件目录不在固定位置）。' +
+          '进第三步照着填一遍，这个向导就走完了。</div>' +
+          '<div class="row"><button class="big" type="button" onclick="go(3)">继续：去第三步核对路径 →</button></div>';
+      } else {
+        tail = '<div class="row"><button class="big" type="button" onclick="go(2)">继续：装外部程序 →</button></div>';
+      }
+      var res = $("gd-res");
+      if (res) res.innerHTML = '<div class="chk">' + head + rows + tail + '</div>';
+      note(miss ? "err" : "ok", miss ? ("还缺 " + miss + " 项") : ("已确认 " + hit + " 项"));
+    });
+  }
+
+  function step2(){
+    var rows = "";
+    if (S.probe) {
+      for (var i = 0; i < PROBE_KEYS.length; i++) {
+        var k = PROBE_KEYS[i], it = S.probe[k] || {};
+        rows += '<div class="li"><em>' + esc(labelOf(k)) + "：" + esc(it.path || it.value || "") +
+          '</em><span class="tag ' + (it.found ? "ok" : "no") + '">' +
+          (it.found ? "已找到" : "未找到") + "</span></div>";
+      }
+      rows = '<div class="list">' + rows + "</div>";
+    }
+    return '<h2>第二步：接 QQ（可选）</h2>' +
+      '<p class="lead">这一步可以跳过。不接 QQ 也能用：装完打开控制台，左边第二个就是「对话」，直接跟她说话。</p>' +
+      '<div class="links">' +
+      '<a href="https://im.qq.com/pcqq/" target="_blank" rel="noreferrer">① 下载 QQ 客户端（要一个小号）</a>' +
+      '<a href="https://github.com/AstrBotDevs/AstrBot/releases" target="_blank" rel="noreferrer">② AstrBot（负责把她接进 QQ）</a>' +
+      "</div>" +
+      '<div class="row"><button class="big" type="button" onclick="check2()">我装好了，检查</button></div>' +
+      rows + msgBox() +
+      '<div class="note"><b>还差一个「协议端」。</b>它是把 QQ 变成标准接口的转换器，本项目<b>不提供、不分发、也不提供下载指引</b>——你需要自己合法获得一份，并自行承担相应责任。手上没有就跳过这一步，控制台照样能用。' +
+      "检查用的是程序里的探测接口，只读路径，不改任何东西。</div>" +
+      nav();
+  }
+
+  function step3(){
+    var src = S.paths || {};
+    var items = "";
+    for (var i = 0; i < STEP3_KEYS.length; i++) {
+      var k = STEP3_KEYS[i];
+      var v = src[k] == null ? "" : String(src[k]);
+      var miss = v ? "" : " miss";
+      items += '<div class="item' + miss + '"><b>' + esc(labelOf(k)) +
+        '</b><span>' + esc(k) + " · " + esc(hintOf(k)) + '</span>' +
+        '<input type="text" data-k="' + esc(k) + '" value="' + esc(v) + '"></div>';
+    }
+    return '<h2>第三步：自动配路径</h2>' +
+      '<p class="lead">程序要去哪找 QQ、AstrBot、协议端，都在这一页填。黄色的没找到，手动补一下就行。</p>' +
+      '<div class="row">' +
+      '<button class="big" type="button" onclick="autoFill()">自动探测并填好</button>' +
+      '<button class="big ghost" type="button" onclick="savePaths()">保存路径</button></div>' +
+      '<div class="pk">' + items + "</div>" + msgBox() +
+      '<div class="note">只有 AstrBot / QQ / 协议端这些外部程序要填；程序自己的文件不用管。' +
+      "保存后会写进 config-paths.json，重启程序才生效。</div>" +
+      nav();
+  }
+
+  function step4(){
+    return '<h2>第四步：登录小号 QQ</h2>' +
+      '<p class="lead" style="font-size:16px;color:#1d2530">这一步必须你自己来——二维码是 QQ 弹的，我生成不了。</p>' +
+      '<div class="note" style="margin:0 0 14px;border:1px solid #f0e2c4;background:#fffdf6;color:#7a5408;padding:10px 12px;border-radius:10px">' +
+      "<b>要登的是小号，不是你的主号。</b>这个号会被绑定成 AI 的容器：她用它说话、读它收到的消息。" +
+      "用主号会两边互相顶下线，别人的消息也会被她的记忆当成「主人说的」。</div>" +
+      '<button class="big" type="button" onclick="openQQ()">打开 QQ</button>' +
+      '<div class="row"><button class="big ghost" type="button" onclick="check4()">我登录好了，继续</button></div>' +
+      msgBox() +
+      '<div class="note">请在 QQ 窗口里扫码登录；登录完成后点上面第二个按钮，我读一下状态。' +
+      "这一步不会自动扫码、不会自动点确认，做不到就不假装做到。</div>" +
+      nav();
+  }
+
+  function step5(){
+    return '<h2>第五步：填 key 并完成</h2>' +
+      '<p class="lead">模型 key 只写进 key.txt 这一处，不进配置文件、不进日志。</p>' +
+      '<label for="key">把你的模型 key 粘这里</label>' +
+      '<input type="password" id="key" placeholder="百炼 sk-ws- 开头 / DeepSeek sk- 开头" autocomplete="off">' +
+      '<div class="row"><button class="big" type="button" onclick="finish()">保存并启动</button></div>' +
+      msgBox() +
+      '<div class="note">还没有 key？去阿里云百炼控制台的「API-KEY 管理」新建一条——<b>只显示一次</b>，当场复制存好。' +
+      '拿不到百炼的 key，用 DeepSeek 或别家的也行，只要长得像 <code>sk-</code> 开头那串。</div>' +
+      '<div class="note">保存后顺手启动整条链。启动要几十秒，控制台能打开就算成功。</div>' +
+      nav();
+  }
+
+  function donePage(){
+    var here = window.location.href;
+    var bat = "@echo off\r\nstart \"\" \"" + API + "/console\"\r\n";
+    return '<h2 class="big-ok">装好了！</h2>' +
+      '<p class="lead" style="text-align:center">下面三条都能过，就说明这套真的跑起来了。</p>' +
+      '<div class="chk">' +
+      "<div>1. 浏览器打开 " + API + "/health 返回 200</div>" +
+      "<div>2. QQ 私聊发一句「在吗」，三秒内有回复</div>" +
+      "<div>3. 控制台 " + API + "/console 能打开、状态不是灰色</div>" +
+      "</div>" +
+      '<div class="row"><button class="big" type="button" onclick="openConsole()">打开控制台</button></div>' +
+      '<label>桌面快捷方式（浏览器里建不了，把下面这段存成 打开控制台.bat 双击即可）</label>' +
+      '<textarea id="bat" readonly>' + esc(bat) + "</textarea>" +
+      '<div class="row"><button class="big ghost" type="button" onclick="copyBat()">复制这段文字</button></div>' +
+      msgBox() +
+      '<div id="pw"></div>' +
+      '<div class="note">向导进度存在本机浏览器里，刷新不会丢；全部做完可以关掉这个页面。</div>' +
+      '<div class="nav"><button type="button" onclick="go(5)">← 上一步</button><button type="button" onclick="reset()">重新走一遍</button></div>';
+  }
+
+  function render(){
+    var names = ["选路", "接 QQ（可选）", "配路径", "登录小号 QQ", "填 key"];
+    var dots = "";
+    for (var i = 0; i < names.length; i++) {
+      var n = i + 1;
+      var cls = S.step === n ? " on" : (S.step > n ? " done" : "");
+      dots += '<div class="dot' + cls + '">' + n + " · " + names[i] + "</div>";
+    }
+    $("dots").innerHTML = dots;
+    $("barfill").style.width = Math.round((S.step / 5) * 100) + "%";
+    var body = [step1, step2, step3, step4, step5][S.step - 1]();
+    if (S.step === 6) body = donePage();
+    $("app").innerHTML = body;
+    if (S.step === 6) setTimeout(pathWarn, 80);
+  }
+
+  // 完成页兜底：所有外部程序都探测不到，说明第三步压根没保存过路径。
+  // 安装包用户最容易漏这步——程序能开，但控制台一片灰，看起来像"装了个空壳"。
+  function pathWarn(){
+    http("GET", "/api/console/probe", null).then(function(j){
+      var p = j && j.probe;
+      if (!p) return;
+      var total = 0, miss = 0;
+      for (var k in p) {
+        if (p[k] && typeof p[k].found === "boolean") { total++; if (!p[k].found) miss++; }
+      }
+      var el = $("pw");
+      if (!el || !total || miss < total) return;
+      el.innerHTML = '<div class="note" style="border:1px solid #d94a76;background:#fff5f8;color:#8e2739">' +
+        "<b>路径还没配。</b>从安装包装的人最容易漏这一步：程序能开，但 AstrBot / QQ / 协议层一个都连不上，" +
+        "控制台会是一整片灰。点下面「← 上一步」退到第三步，点一次「保存路径」再回来。" + "</div>";
+    });
+  }
+
+  function dlRepo(){
+    try { window.open(REPO_URL + "/releases", "_blank"); } catch (e) {}
+    note("info", "已经打开下载页。装包本身自带全部程序代码，只有想要源码对账时才需要下。");
+  }
+  function focusDir(){ var e = $("src"); if (e) { e.focus(); e.select(); } }
+  function saveSrc(){
+    var v = ($("src") ? $("src").value : "").replace(/^\s+|\s+$/g, "");
+    if (!v) { note("err", "还没填目录。先在资源管理器里进到源码文件夹，复制地址栏里的路径。"); return; }
+    S.src = v;
+    note("ok", "源码位置：" + v + " ✓");
+  }
+  function extractProbe(j){
+    // 后端 probe 返回 {ok:true, probe:{key:{path,found}}}；这里兼容两种形态
+    if (!j || !j.ok) return null;
+    if (j.probe) return j.probe;
+    if (j.paths) return j.paths;
+    return j;
+  }
+  function check2(){
+    note("info", "正在检查，请稍等…");
+    http("GET", "/api/console/probe", null).then(function(j){
+      var p = extractProbe(j);
+      if (!p) { S.probe = null; note("err", (j && j.error) || "探测失败，先确认程序已启动"); render(); return; }
+      S.probe = p;
+      var hit = 0, keys = Object.keys(p);
+      for (var i = 0; i < keys.length; i++) { if (p[keys[i]] && p[keys[i]].found) hit++; }
+      note(hit ? "ok" : "err", hit ? ("探测完成：找到 " + hit + " 项") : "一个都没找到，确认软件装好了、路径选对了吗");
+      render();
+    });
+  }
+  function autoFill(){
+    if (S.probe) { fillFrom(S.probe); return; }
+    note("info", "正在探测…");
+    http("GET", "/api/console/probe", null).then(function(j){
+      var p = extractProbe(j);
+      if (!p) { note("err", (j && j.error) || "探测失败"); return; }
+      S.probe = p;
+      fillFrom(p);
+    });
+  }
+  function fillFrom(p){
+    var boxes = document.querySelectorAll("input[data-k]");
+    var filled = 0;
+    for (var i = 0; i < boxes.length; i++) {
+      var k = boxes[i].getAttribute("data-k");
+      var it = p[k];
+      var v = it ? (it.path || it.value || "") : "";
+      if (v) { boxes[i].value = v; filled++; boxes[i].parentNode.className = "item"; }
+    }
+    note(filled ? "ok" : "err", filled ? ("已自动填好 " + filled + " 项，剩下的手动补") : "没探测到可填的路径，请手动填");
+  }
+  function savePaths(){
+    var boxes = document.querySelectorAll("input[data-k]");
+    var out = {};
+    for (var i = 0; i < boxes.length; i++) {
+      var k = boxes[i].getAttribute("data-k");
+      if (k === "_说明") continue;
+      out[k] = (boxes[i].value || "").replace(/^\s+|\s+$/g, "");
+    }
+    note("info", "保存中…");
+    http("POST", "/api/console/paths", { paths: out }).then(function(j){
+      if (!j || !j.ok) { note("err", (j && j.error) || "保存失败"); return; }
+      S.paths = j.paths || out;
+      var ch = j.changed || [];
+      note("ok", "已保存。改动 " + ch.length + " 项" + (ch.length ? "：" + ch.join("、") : "（没有变化）"));
+      render();
+    });
+  }
+  function openQQ(){
+    note("info", "正在启动…");
+    http("POST", "/api/console/launch", { what: "brain", on: true }).then(function(j){
+      if (!j || !j.ok) { note("err", (j && j.error) || "启动失败"); return; }
+      note(j.started ? "ok" : "info", j.started ? "进程已拉起，看 QQ 窗口有没有弹出来" : "程序说没起来，先看看 QQ 是不是得手动双击");
+    });
+  }
+  function check4(){
+    note("info", "读状态中…");
+    http("GET", "/api/console/state", null).then(function(j){
+      if (!j || !j.ok) { note("err", (j && j.error) || "读不到状态"); return; }
+      var q = j.qq || {};
+      var acct = q.account || {};
+      var name = acct.nick || acct.name || acct.uin || "";
+      if (q.ws || name) { note("ok", "检测到登录 ✓" + (name ? "：" + name : "")); }
+      else { note("err", "还没检测到，再等等——协议层连上要十几秒。"); }
+    });
+  }
+  function finish(){
+    var v = ($("key") ? $("key").value : "").replace(/^\s+|\s+$/g, "");
+    if (!v) { note("err", "key 还没填。去模型控制台复制一条，sk- 开头那串。"); return; }
+    note("info", "保存 key…");
+    http("POST", "/api/console/key", { key: v }).then(function(j){
+      if (!j || !j.ok) { note("err", (j && j.error) || "key 保存失败"); return; }
+      note("info", "key 已保存，正在启动…");
+      http("POST", "/api/console/launch", { what: "brain", on: true }).then(function(j2){
+        S.step = 6;
+        try { localStorage.setItem(STEP_KEY, "6"); } catch (e) {}
+        render();
+      });
+    });
+  }
+  function openConsole(){ window.open(API + "/console", "_blank"); }
+  function copyBat(){
+    var t = $("bat");
+    if (!t) return;
+    t.select();
+    var okc = false;
+    try { okc = document.execCommand("copy"); } catch (e) { okc = false; }
+    note(okc ? "ok" : "info", okc ? "已复制，存成 打开控制台.bat 就行" : "复制没成功，手动全选复制这段文字");
+  }
+  function reset(){
+    try { localStorage.removeItem(STEP_KEY); } catch (e) {}
+    S = { step: 1, pick: "", src: "", probe: null, paths: null, saved: "", msgType: "info", msg: "" };
+    render();
+  }
+
+  window.go = go; window.dlRepo = dlRepo; window.focusDir = focusDir; window.saveSrc = saveSrc;
+  window.check2 = check2; window.autoFill = autoFill; window.savePaths = savePaths;
+  window.pick = pick; window.genGuide = genGuide; window.copyGuide = copyGuide;
+  window.recheck = recheck;
+  window.openQQ = openQQ; window.check4 = check4; window.finish = finish;
+  window.openConsole = openConsole; window.copyBat = copyBat; window.reset = reset;
+
+  try {
+    var saved = 1;
+    try { saved = parseInt(localStorage.getItem(STEP_KEY) || "1", 10) || 1; } catch (e) { saved = 1; }
+    S.step = saved >= 1 && saved <= 6 ? saved : 1;
+    render();
+    if (window.location.protocol === "file:") {
+      setTimeout(function(){ note("info", "当前是以文件方式打开的。接口已允许跨源；若提示连不上，先启动程序再点一次。"); }, 300);
+    }
+  } catch (err) {
+    document.getElementById("app").innerHTML =
+      '<h2>页面出错了</h2><p class="lead">' + esc(err && err.message ? err.message : String(err)) +
+      "</p><p class='note'>把这段报错发给我就行，不影响已经装好的东西。</p>";
+  }
+})();
+</script>
+</body>
+</html>
