@@ -30,6 +30,15 @@ h1,h2,h3,p{margin:0}
 .top-st{margin-left:auto;font-size:12px;color:var(--dim)}
 main{padding:var(--sp-5);max-width:1100px}
 .sec{display:none}.sec.on{display:block}
+/* 对话页 */
+#chat-log{margin:var(--sp-2) 0;height:clamp(220px,42vh,420px);overflow-y:auto;padding:var(--sp-3);border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-2);display:flex;flex-direction:column;gap:10px}
+.bub{max-width:76%;padding:9px 12px;border-radius:12px;font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.bub .who{font-size:11px;color:var(--dim);margin-bottom:2px}
+.bub.me{align-self:flex-end;background:var(--brand-soft);color:var(--text)}
+.bub.pet{align-self:flex-start;background:var(--surface);border:1px solid var(--line)}
+.chat-empty{color:var(--dim);font-size:13px;text-align:center;margin:auto;padding:var(--sp-5)}
+#chat-in{width:100%;min-height:68px;max-height:200px;resize:vertical;padding:10px 12px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font:inherit;font-size:14px;line-height:1.6;outline:none}
+#chat-in:focus{border-color:var(--brand-line);box-shadow:0 0 0 3px var(--brand-soft)}
 .sec-h{font-size:16px;font-weight:500;margin-bottom:var(--sp-2)}
 .lede{font-size:12px;color:var(--dim);margin-bottom:var(--sp-5)}
 .alert{display:flex;align-items:center;gap:var(--sp-2);background:var(--amber-soft);border:1px solid var(--line);border-radius:var(--radius-sm);padding:var(--sp-3);font-size:13px;color:var(--text);margin-bottom:var(--sp-4)}
@@ -86,6 +95,7 @@ summary{cursor:pointer;font-size:13px;font-weight:500}
   <div class="brand"><div class="mark">鱼<img src="assets/char/avatar.webp" alt="" onerror="this.remove()"></div><div><b>小宠物控制台</b><small>全功能开关台</small></div></div>
   <div class="grp">主菜单</div>
   <button class="nav active" data-s="overview"><i></i>总览</button>
+  <button class="nav" data-s="chat"><i></i>对话</button>
   <button class="nav" data-s="launch"><i></i>开程序</button>
   <button class="nav" data-s="pet"><i></i>桌宠与鱼搭子</button>
   <button class="nav" data-s="modules"><i></i>模块开关</button>
@@ -121,6 +131,16 @@ summary{cursor:pointer;font-size:13px;font-weight:500}
   <div class="card"><b>系统状态</b><small>哪个进程掉了，去「开程序」补。</small><div class="status-dots" id="launch-tip" style="margin-top:12px"></div></div>
   <div class="card"><b>常驻状态</b><small>后台任务不随页面切换消失；这里只显示真实上报的状态。</small>
     <div class="row" style="margin-top:12px"><span class="muted" id="ov-hands">鱼搭子挂件：读取中</span><span class="muted" id="ov-usage">用量：读取中</span></div></div>
+</section>
+
+<section class="sec" id="s-chat">
+  <h2 class="sec-h">对话</h2><p class="lede">直接跟她说话。走的是同一条大脑链路，记忆和桌宠、QQ 共用；回复只显示在这里，不会发到 QQ。</p>
+  <div class="card">
+    <div id="chat-log"></div>
+    <textarea id="chat-in" placeholder="说点什么…（Enter 发送，Shift+Enter 换行）"></textarea>
+    <div class="row" style="margin-top:10px"><button class="act" onclick="chatSend()">发送</button><button class="act del" onclick="chatClear()">清空记录</button><span class="hint" id="chat-tip"></span></div>
+  </div>
+  <p class="hint">「清空记录」只清这个页面的本地显示，不删记忆。想让她忘掉某段，去记忆那边处理。</p>
 </section>
 
 <section class="sec" id="s-launch">
@@ -256,7 +276,7 @@ const PET_SWITCHES=[
 let petCfg=null;
 const VISITOR_PERM="能：纯文字聊天（访客卡+备课笔记+他自己之前聊过的摘要），发表情，消息里的图片会一并送上。不能：开程序、读文件、看屏幕、长期记忆、学说话、动作标记、桌面同步、语音、看主人的任何资料。他的摘要单独存在 student-memory.json，和主人记忆不互通。";
 const PB={owner:["pc-text","pc-new","pc-tip"],visitor:["vp-text","vp-new","vp-tip"],family:["fp-text","fp-new","fp-tip"]};
-const SECTIONS={overview:["总览","控制台 / 总览"],launch:["开程序","控制台 / 开程序"],pet:["桌宠与鱼搭子","控制台 / 桌宠与鱼搭子"],modules:["模块开关","控制台 / 模块开关"],usage:["用量与消耗","控制台 / 用量与消耗"],policy:["权限与白名单","控制台 / 权限与白名单"],persona:["人格卡","控制台 / 人格卡"],qq:["QQ 与联动","控制台 / QQ 与联动"],emotion:["情绪状态","控制台 / 情绪状态"],todo:["待办提醒","控制台 / 待办提醒"],diary:["日记","控制台 / 日记"]};
+const SECTIONS={overview:["总览","控制台 / 总览"],chat:["对话","控制台 / 对话"],launch:["开程序","控制台 / 开程序"],pet:["桌宠与鱼搭子","控制台 / 桌宠与鱼搭子"],modules:["模块开关","控制台 / 模块开关"],usage:["用量与消耗","控制台 / 用量与消耗"],policy:["权限与白名单","控制台 / 权限与白名单"],persona:["人格卡","控制台 / 人格卡"],qq:["QQ 与联动","控制台 / QQ 与联动"],emotion:["情绪状态","控制台 / 情绪状态"],todo:["待办提醒","控制台 / 待办提醒"],diary:["日记","控制台 / 日记"]};
 const HAND_KEYS=[["on","挂件总开关"],["voice","挂件语音"],["max_tokens","单次上限"],["history_turns","历史轮数"],["sub_seconds","字幕秒数"],["sub_lines","字幕行数"],["frame_max","抓帧上限"],["frame_min_gap","补帧最小间隔"],["frame_per_hour","每小时抓帧上限"],["frame_hash_gap","画面相似度阈值"],["frame_reuse","旧图复用秒数"],["frame_resend_gap","同图重发间隔"]];
 let handsReply=null;
 const $=id=>document.getElementById(id);
@@ -265,7 +285,7 @@ async function api(path,body){const r=await fetch(path,body?{method:"POST",heade
 async function safeApi(path,body){try{return await api(path,body);}catch(e){return null;}}
 function fmtTokens(v){if(!Number.isFinite(v)||v<=0)return "0";return Math.round(v).toLocaleString("zh-CN");}
 function fmtCny(v){if(!Number.isFinite(v)||v<=0)return "¥0";if(v>=1000)return "¥"+Math.round(v).toLocaleString("zh-CN");if(v>=0.01)return "¥"+v.toFixed(2);if(v>=0.001)return "¥"+v.toFixed(3);return "<¥0.001";}
-function showSection(id){const s=SECTIONS[id];if(!s)return;document.querySelectorAll(".sec").forEach(e=>e.classList.toggle("on",e.id==="s-"+id));document.querySelectorAll(".nav").forEach(e=>e.classList.toggle("active",e.dataset.s===id));$("crumb").textContent=s[0];$("crumb-path").textContent=s[1];try{localStorage.setItem("dfy-sec",id);}catch(e){}const f=$("em-frame");if(f&&id==="emotion"&&!f.getAttribute("src"))f.src="/emotion?embed=1";if(id==="diary")loadDiary();}
+function showSection(id){const s=SECTIONS[id];if(!s)return;document.querySelectorAll(".sec").forEach(e=>e.classList.toggle("on",e.id==="s-"+id));document.querySelectorAll(".nav").forEach(e=>e.classList.toggle("active",e.dataset.s===id));$("crumb").textContent=s[0];$("crumb-path").textContent=s[1];try{localStorage.setItem("dfy-sec",id);}catch(e){}const f=$("em-frame");if(f&&id==="emotion"&&!f.getAttribute("src"))f.src="/emotion?embed=1";if(id==="diary")loadDiary();if(id==="chat")chatRender();}
 /* ---- 日记：只读，来自 core/diary.py 的 paragraphs() ---- */
 let DIARY=[],DIARY_SHOWN=30;
 function escHtml(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
@@ -597,4 +617,46 @@ document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>showSection(b.dataset
 try{const t=localStorage.getItem("dfy-theme");if(t){document.documentElement.setAttribute("data-theme",t);$("theme-tip").textContent="当前："+(t==="dark"?"深色":"浅色");}const s=localStorage.getItem("dfy-sec");if(s&&SECTIONS[s])showSection(s);}catch(e){}
 load().catch(e=>{$("st-proxy").textContent="连不上代理";});
 setInterval(()=>load().catch(()=>{}),5000);
+/* ---- 对话页 ---- */
+var CHAT_KEY="dfy-chat-log",chatLog=[];
+try{var _cl=JSON.parse(localStorage.getItem(CHAT_KEY)||"[]");if(Array.isArray(_cl))chatLog=_cl;}catch(e){chatLog=[];}
+function chatEsc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;"})[c];});}
+function chatSave(){try{localStorage.setItem(CHAT_KEY,JSON.stringify(chatLog.slice(-40)));}catch(e){}}
+function chatRender(){var box=$("chat-log");if(!box)return;
+  if(!chatLog.length){box.innerHTML='<div class="chat-empty">还没聊过。直接说一句话试试 —— 回复只在这里，不会发到 QQ。</div>';return;}
+  box.innerHTML=chatLog.map(function(m){var me=m.role==="user";return '<div class="bub '+(me?"me":"pet")+'"><div class="who">'+(me?"我":"她")+'</div><div class="txt">'+chatEsc(m.content)+'</div></div>';}).join("");
+  box.scrollTop=box.scrollHeight;}
+function chatAdd(role,content){chatLog.push({role:role,content:content});if(chatLog.length>40)chatLog=chatLog.slice(-40);chatSave();chatRender();}
+function chatClear(){if(!confirm("清空这个页面上的聊天记录？只清本地显示，不动记忆。"))return;chatLog=[];chatSave();chatRender();toast("清掉了");}
+var chatBusy=false;
+async function chatSend(){
+  var inp=$("chat-in"),tip=$("chat-tip");
+  if(!inp||chatBusy)return;
+  var text=(inp.value||"").trim();
+  if(!text){inp.focus();return;}
+  chatBusy=true;chatAdd("user",text);inp.value="";if(tip)tip.textContent="她在想…";
+  var msgs=chatLog.slice(-12).map(function(m){return {role:m.role,content:m.content};});
+  var t0=Date.now();
+  try{
+    var r=await fetch("/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"ai-pet",messages:msgs,stream:false})});
+    var raw=await r.text(),j=null;try{j=JSON.parse(raw);}catch(e){}
+    var reply="";try{reply=(j.choices[0].message.content||"");}catch(e){}
+    if(!reply&&!r.ok){
+      var em=(j&&j.error&&(j.error.message||j.error))||("HTTP "+r.status);
+      chatAdd("assistant","（没连上大脑："+em+"）");if(tip)tip.textContent="出错了";
+    }else if(!String(reply).trim()){
+      chatAdd("assistant","（这一句她选择不说）");if(tip)tip.textContent="空回复";
+    }else{
+      chatAdd("assistant",reply);if(tip)tip.textContent="用了 "+((Date.now()-t0)/1000).toFixed(1)+" 秒";
+    }
+  }catch(e){
+    chatAdd("assistant","（请求失败："+(e&&e.message?e.message:e)+"）");if(tip)tip.textContent="请求失败";
+  }finally{chatBusy=false;var l=$("chat-log");if(l)l.scrollTop=l.scrollHeight;}
+}
+document.addEventListener("keydown",function(e){
+  var inp=$("chat-in");
+  if(!inp||document.activeElement!==inp)return;
+  if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();chatSend();}
+});
+chatRender();
 </script></body></html>

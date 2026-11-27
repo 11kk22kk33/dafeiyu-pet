@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>鸣谢与许可 · AI 宠物</title>
+<style>
+  :root{
+    --ink:#1d2530; --sub:#5a6779; --line:#e4e9f0; --bg:#f4f6fa;
+    --pri:#3b7ddd; --pri-d:#2557a7; --ok:#0d8055;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);
+    font:15px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    -webkit-font-smoothing:antialiased}
+  a{color:var(--pri-d);text-decoration:none;border-bottom:1px solid #cfdff8}
+  a:hover{border-bottom-color:var(--pri-d)}
+  .wrap{max-width:760px;margin:0 auto;padding:26px 20px 60px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:14px;
+    font-size:13px;color:var(--sub);margin-bottom:16px}
+  .top a{border-bottom:0;color:var(--sub)}
+  .top a:hover{color:var(--pri-d)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;
+    padding:28px 30px 30px;box-shadow:0 2px 14px rgba(31,45,66,.05)}
+  @media(max-width:600px){.card{padding:22px 18px 24px;border-radius:14px}.wrap{padding:16px 12px 40px}}
+  h1{font-size:23px;margin:0 0 8px;letter-spacing:.3px}
+  .sub{font-size:14px;color:var(--sub);margin:0 0 6px}
+  .stat{font-size:12px;color:#98a4b4;margin:10px 0 0}
+  .grp{margin-top:26px}
+  .grp>b{display:block;font-size:13px;font-weight:700;color:#8a5c0a;
+    background:#fffdf6;border:1px solid #f0e2c4;border-radius:9px;
+    padding:6px 12px;margin-bottom:4px}
+  .grp.blue>b{color:#2b4f96;background:#f4f8ff;border-color:#d5e2ff}
+  .grp.green>b{color:#0d6f4a;background:#f2fbf7;border-color:#c6ebda}
+  .who{padding:13px 2px;border-bottom:1px solid var(--line)}
+  .who:last-child{border-bottom:0}
+  .who .n{font-size:15px;font-weight:600;color:#22304a}
+  .who .n em{font-style:normal;font-weight:400;font-size:12.5px;color:#8a97a8;margin-left:9px}
+  .who .d{font-size:13.5px;color:#4a5566;margin-top:4px}
+  .who .m{font-size:12px;color:#8a97a8;margin-top:5px;display:flex;flex-wrap:wrap;
+    align-items:center;gap:8px}
+  .lic{display:inline-block;background:#f2f5f9;border:1px solid #e6ebf2;border-radius:5px;
+    padding:1px 7px;font-size:11.5px;color:#5a6779;white-space:nowrap}
+  .end{margin-top:28px;padding:15px 17px;border:1px solid #f0e2c4;background:#fffdf6;
+    border-radius:12px;font-size:13px;color:#5a4a28;line-height:1.85}
+  .end b{color:#8a5c0a}
+  .end + .end{margin-top:10px;border-color:#d5e2ff;background:#f4f8ff;color:#2b3d5c}
+  .end + .end b{color:#2557a7}
+  footer{margin-top:22px;text-align:center;font-size:12px;color:#98a4b4}
+  @media print{body{background:#fff}.card{box-shadow:none;border:0}.top{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <a href="setup.html">← 返回安装向导</a>
+    <span>第三方组件的许可仍归各原作者</span>
+  </div>
+
+  <div class="card">
+    <h1>鸣谢与许可</h1>
+    <p class="sub">这套东西能跑起来，大半功劳不在我。下面按「谁的东西」分开写清楚，能点进去的都给了原仓库。</p>
+    <p class="stat">共 13 项署名 · 最后核对 2026-11-27 · 随包分发时请保留本页</p>
+
+    <div class="grp">
+      <b>上游框架 · 别人的项目在扛核心</b>
+      <div class="who">
+        <div class="n">AstrBot <em>Soulter / AstrBotDevs</em></div>
+        <div class="d">QQ 这一侧全靠它接。私聊、群聊、插件调度、图片与语音的发送入口都在它身上，本项目的五个插件跑在它的插件系统里。</div>
+        <div class="m"><span class="lic">AGPL-3.0</span>
+          <a href="https://github.com/AstrBotDevs/AstrBot" target="_blank" rel="noreferrer">AstrBotDevs/AstrBot</a></div>
+      </div>
+      <div class="who">
+        <div class="n">SnowLuma <em>SnowLumaDevs</em></div>
+        <div class="d">QQ 协议运行时。把 QQ 变成标准的 OneBot v11 接口（本机 3000 端口），消息才进得来、出得去。本项目只调用、未修改其源码。</div>
+        <div class="m"><span class="lic">源码可见 · 非商业许可 1.1</span></div>
+      </div>
+    </div>
+
+    <div class="grp blue">
+      <b>派生自 · 必须署名的部分</b>
+      <div class="who">
+        <div class="n">dsh-fish-buddy（鱼搭子） <em>Yuuyuko-uu</em></div>
+        <div class="d">桌面挂件与「鱼搭子」的原型。本项目的桌面壳、挂件式交互与部分思路派生自它。按其许可要求注明原仓库与原作者：<b>原作者 Yuuyuko-uu，原仓库 Yuuyuko-uu/dsh-fish-buddy</b>。派生部分不是本项目原创。</div>
+        <div class="m"><span class="lic">Yuuyuko-uu 插件许可 1.0</span>
+          <a href="https://github.com/Yuuyuko-uu/dsh-fish-buddy" target="_blank" rel="noreferrer">Yuuyuko-uu/dsh-fish-buddy</a></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <b>AstrBot 插件 · 直接装来用的</b>
+      <div class="who">
+        <div class="n">astrbot_plugin_biliVideo <em>storyAura</em></div>
+        <div class="d">「把 B 站视频真的看一遍」靠它：拿单文件直链、绕开 P2P、解析字幕。插件内附带 JetBrains Mono 与 Noto Sans SC 字体（SIL OFL）。</div>
+        <div class="m"><span class="lic">MIT</span>
+          <a href="https://github.com/storyAura/astrbot_plugin_biliVideo" target="_blank" rel="noreferrer">storyAura/astrbot_plugin_biliVideo</a></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <b>运行时与库 · 每天都在用，但看不见</b>
+      <div class="who">
+        <div class="n">edge-tts <em>rany（rany2）</em></div>
+        <div class="d">语音合成。读 AstrBot 面板里设好的音色，按标点切句、疑问句上扬、感叹句加重。</div>
+        <div class="m"><span class="lic">GPL-3.0</span>
+          <a href="https://github.com/rany2/edge-tts" target="_blank" rel="noreferrer">rany2/edge-tts</a></div>
+      </div>
+      <div class="who">
+        <div class="n">FFmpeg <em>FFmpeg 团队（gyan.dev 7.1 essentials 构建）</em></div>
+        <div class="d">句间静音拼接、音频转封装。没有它，语音会是一句一句断开、听着像机器人。</div>
+        <div class="m"><span class="lic">GPL / LGPL</span>
+          <a href="https://ffmpeg.org" target="_blank" rel="noreferrer">ffmpeg.org</a></div>
+      </div>
+      <div class="who">
+        <div class="n">Pillow <em>Jeffrey A. Clark 与 Pillow 贡献者</em></div>
+        <div class="d">视频抽帧、截图缩放、表情图处理。</div>
+        <div class="m"><span class="lic">MIT-CMU</span>
+          <a href="https://python-pillow.org" target="_blank" rel="noreferrer">python-pillow.org</a></div>
+      </div>
+      <div class="who">
+        <div class="n">NumPy <em>NumPy 开发者</em></div>
+        <div class="d">帧序列与数值处理。</div>
+        <div class="m"><span class="lic">BSD-3-Clause</span>
+          <a href="https://numpy.org" target="_blank" rel="noreferrer">numpy.org</a></div>
+      </div>
+      <div class="who">
+        <div class="n">Python <em>Python Software Foundation</em></div>
+        <div class="d">运行环境本身（随包带的 3.12）。</div>
+        <div class="m"><span class="lic">PSF-2.0</span>
+          <a href="https://www.python.org" target="_blank" rel="noreferrer">python.org</a></div>
+      </div>
+    </div>
+
+    <div class="grp blue">
+      <b>思路与理论 · 抄的是想法，代码是自己写的</b>
+      <div class="who">
+        <div class="n">OCC 情绪模型 + Plutchik 情绪轮 <em>Ortony / Clore / Collins（1988）· Robert Plutchik</em></div>
+        <div class="d">九根基本情绪、各自半衰期、组合情绪这套设定，理论出处在这里。代码是独立实现的。</div>
+        <div class="m"><span class="lic">学术理论 · 公有</span></div>
+      </div>
+      <div class="who">
+        <div class="n">dsh-emotion-state <em>情绪注入的设计取向</em></div>
+        <div class="d">「只记状态和账、不模拟心情、数字不出口」这条设计取向参考了它，实现方式不同。</div>
+        <div class="m"><span class="lic">思路参考</span></div>
+      </div>
+    </div>
+
+    <div class="grp green">
+      <b>本项目自写 · 免得误会</b>
+      <div class="who">
+        <div class="n">proxy.py 与 core/ <em>本项目</em></div>
+        <div class="d">网关、人设拼装、记忆召回、情绪状态机、权限与防抖、TTS 分发、控制台页面，都是照着需求一行行写的。</div>
+        <div class="m"><span class="lic">见仓库 LICENSE</span></div>
+      </div>
+      <div class="who">
+        <div class="n">五个 AstrBot 插件 <em>本项目</em></div>
+        <div class="d">dafeiyu_group（群聊节奏）、dafeiyu_guard（区分主人/同学/群友）、meme_sender（表情包）、tts_on_demand（按需语音）、video_watch（看视频）。这几个是自建的，不是从别处搬的。</div>
+        <div class="m"><span class="lic">见仓库 LICENSE</span></div>
+      </div>
+    </div>
+
+    <div class="end">
+      <b>许可归属：</b>上面每个第三方组件仍适用它自己的许可，不被本项目的许可替代。衍生自 dsh-fish-buddy 的部分保留原作者署名，不称自研。
+    </div>
+    <div class="end">
+      <b>要是漏了谁：</b>这套系统借用面很杂，难免有忘了写的地方。发现了请告诉我，我补上——署名这件事不能靠「大概齐」。
+    </div>
+  </div>
+
+  <footer>还有一句留给不在名单上的人：所有把 QQ 机器人做到能用、并且愿意把代码放出来的人。</footer>
+</div>
+</body>
+</html>

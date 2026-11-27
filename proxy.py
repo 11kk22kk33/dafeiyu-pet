@@ -92,6 +92,7 @@ CODE_MAP = [
     ("proxy.py", "核心", "8787 网关：收 QQ/桌宠/控制台请求，拼人设+记忆+权限+情绪，转发模型再回写"),
     ("console.html", "界面", "控制台：总览/开程序/模块/人格/情绪/待办/日记"),
     ("setup.html", "界面", "首次配置向导：5 步，只写 config-paths.json 和 key.txt"),
+    ("credits.html", "界面", "鸣谢与许可：第三方组件、作者与许可，只读一页"),
     ("emotion.html", "界面", "情绪面板，可被控制台内嵌"),
     ("launcher.py", "入口", "启动器：单实例锁 → 起 proxy → 等 /health → 按 key+路径决定进向导还是控制台"),
     ("core/memory.py", "记忆", "记忆池：profile 固定事实 / recall 相关旧事 / recent_events 近几天"),
@@ -329,6 +330,7 @@ MODULES_FILE = os.path.join(BASE, "modules.json")
 CONSOLE_FILE = os.path.join(BASE, "console.html")
 EMOTION_PAGE = os.path.join(BASE, "emotion.html")
 SETUP_PAGE = os.path.join(BASE, "setup.html")
+CREDITS_PAGE = os.path.join(BASE, "credits.html")
 PEOPLE_MODES = ("owner", "family", "visitor", "quiet")
 POLICIES = ("visitor", "owner", "custom")
 MODE_ALIAS = {"teacher": "visitor"}
@@ -4163,6 +4165,19 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/setup", "/setup.html"):
             try:
                 with open(SETUP_PAGE, "rb") as fh:
+                    page = fh.read()
+            except Exception as exc:
+                self._json(500, {"ok": False, "error": repr(exc)})
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(page)))
+            self.end_headers()
+            self.wfile.write(page)
+            return
+        if path in ("/credits", "/credits.html"):
+            try:
+                with open(CREDITS_PAGE, "rb") as fh:
                     page = fh.read()
             except Exception as exc:
                 self._json(500, {"ok": False, "error": repr(exc)})

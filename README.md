@@ -1,8 +1,10 @@
 # 大肥鱼 · Windows QQ AI 宠物网关
 
-把 AstrBot、QQ 协议端、桌面桌宠和语音通话缝成一条链的中间层。你在 QQ 里说话，桌面上那只真的会动、会念、会记住你。
+把 AstrBot、QQ 协议端、桌面桌宠和语音通话缝成一条链的中间层。你在控制台或 QQ 里说话，桌面上那只真的会动、会念、会记住你。
 
 > 本仓库只包含**中间层与配置**，不含 AstrBot / QQ / SnowLuma / 桌宠本体。这些要自己装，见下面的快速开始。
+
+> **署名** 桌面挂件与「鱼搭子」派生自 **[Yuuyuko-uu/dsh-fish-buddy](https://github.com/Yuuyuko-uu/dsh-fish-buddy)**（作者 **Yuuyuko-uu**，Yuuyuko-uu 插件许可 1.0）；派生部分不是本项目原创，不得称自研。其余第三方组件（AstrBot / SnowLuma / biliVideo / edge-tts / FFmpeg / Pillow / NumPy）的作者与许可见 **[credits.html](credits.html)**。
 
 ## 五层链路
 
@@ -20,7 +22,7 @@ SnowLuma ──WS──▶ proxy.py :8787（本仓库核心）
 ## 快速开始
 
 1. 把本仓库解到磁盘（建议 `D:\你的目录`，路径别带中文和空格）。
-2. **双击 `setup.html`**，跟着五步向导点：获取源码 → 装 QQ 与协议层 → 配路径 → 登录 QQ → 填 key。
+2. **双击 `setup.html`**，第一步先选一条路：自己手动装，或者让 AI 帮你装（现场体检，生成一份带你本机真实结果的委托，粘给能读盘的 AI，让它自己扫盘写 `config-paths.json`）。后面依次是装 QQ 与协议层 → 配路径 → 登录小号 QQ → 填 key。
 3. 装完打开 <http://127.0.0.1:8787/console> 就是控制台。
 
 不想用向导的话，手动做三件事：复制 `config-paths.example.json` 为 `config-paths.json` 并按本机改路径；把 key 写进 `key.txt`；双击 `start-stack.bat`。
@@ -58,12 +60,12 @@ SnowLuma ──WS──▶ proxy.py :8787（本仓库核心）
 
 - 本仓库自研的中间层（`proxy.py` 等）：MIT，见 [LICENSE](LICENSE)。
 - 桌面挂件 / 鱼搭子：派生自 [Yuuyuko-uu/dsh-fish-buddy](https://github.com/Yuuyuko-uu/dsh-fish-buddy)，**必须保留原作者署名，禁止宣称自研**。
-- SnowLuma：非商业许可，**不随本仓库分发**，只给下载链接 <https://github.com/NapNeko/NapCatQQ-Desktop>。
+- **QQ 接入端（协议层）**：本项目通过 OneBot v11（HTTP 3000）接入 QQ，需要一个你自己合法获得、并愿意承担相应责任的实现。本项目不提供、不分发、不背书任何具体实现，也不提供下载指引。不想碰这条路，可以走 QQ 官方机器人平台 <https://q.qq.com>，本项目同样支持。
 - `vendor/` 下第三方插件：各自 LICENSE 已随附，不要删。
 
 ## 致谢
 
-AstrBot、NapCat / SnowLuma、Yuuyuko-uu 的鱼搭子，以及所有把 QQ 机器人做到能用的人。
+完整名单见 [credits.html](credits.html)（安装向导页脚也能进）。简版：AstrBot（Soulter / AstrBotDevs）、SnowLuma（SnowLumaDevs）、Yuuyuko-uu 的鱼搭子、astrbot_plugin_biliVideo（storyAura）、edge-tts（rany）、FFmpeg、Pillow、NumPy，以及所有把 QQ 机器人做到能用的人。
 
 ## 隐私
 
