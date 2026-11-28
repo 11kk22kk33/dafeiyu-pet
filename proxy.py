@@ -227,7 +227,7 @@ def probe_paths():
     candidates = {
         "astrbot_py": [os.path.join(r, "backend", "python", "python.exe") for r in roots],
         "astrbot_app": [os.path.join(r, "backend", "app") for r in roots],
-        "astrbot_bin": [os.path.join(r, "bin") for r in roots] + [r"D:\AstrBot\bin"],
+        "astrbot_bin": [os.path.join(r, "bin") for r in roots] + list(roots) + [r"D:\AstrBot\bin"],
         "snow_dir": [r"D:\SnowLuma"],
         "qq_exe": [r"D:\qq\QQ.exe", r"C:\Program Files\Tencent\QQ\QQ.exe"],
         "fish_dir": [r"D:\fish-buddy"],
