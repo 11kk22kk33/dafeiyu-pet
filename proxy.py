@@ -184,13 +184,50 @@ def audit_self():
     }
 
 
+AB_VER = "AstrBot_4.29.1_windows_amd64_portable"
+
+
+def astrbot_roots():
+    """AstrBot 可能被解压到哪几层，按可信度排序。
+
+    整合包说明教人解压到 D:\\，得到的是   D:\\AstrBot_4.29.1_windows_amd64_portable
+    老教程让人放进 AstrBot 文件夹，得到 D:\\AstrBot\\AstrBot_4.29.1_windows_amd64_portable
+    两种布局都得认，否则「明明装了却说没找到」。
+    """
+    out, seen = [], set()
+
+    def add(p):
+        p = p.rstrip("\\/")
+        if p and p.lower() not in seen:
+            seen.add(p.lower())
+            out.append(p)
+
+    for base in ("D:\\AstrBot", "D:\\", "C:\\AstrBot", "C:\\"):
+        add(os.path.join(base, AB_VER))
+    for drive in ("D:\\", "C:\\"):
+        try:
+            names = os.listdir(drive)
+        except OSError:
+            continue
+        for name in sorted(names):
+            if name.lower().startswith("astrbot"):
+                add(os.path.join(drive, name))
+    good = [p for p in out if os.path.exists(os.path.join(p, "backend", "python", "python.exe"))]
+    return good or out[:2]
+
+
+def astrbot_root():
+    """当前机器上 AstrBot 实际所在的那一层。"""
+    return astrbot_roots()[0]
+
+
 def probe_paths():
     """扫本机常见安装位置，返回每项路径 + 是否存在。只读，不写任何文件。"""
+    roots = astrbot_roots()
     candidates = {
-        "astrbot_py": [r"D:\AstrBot\AstrBot_4.29.1_windows_amd64_portable\backend\python\python.exe",
-                       r"C:\AstrBot\backend\python\python.exe"],
-        "astrbot_app": [r"D:\AstrBot\AstrBot_4.29.1_windows_amd64_portable\backend\app"],
-        "astrbot_bin": [r"D:\AstrBot\bin"],
+        "astrbot_py": [os.path.join(r, "backend", "python", "python.exe") for r in roots],
+        "astrbot_app": [os.path.join(r, "backend", "app") for r in roots],
+        "astrbot_bin": [os.path.join(r, "bin") for r in roots] + [r"D:\AstrBot\bin"],
         "snow_dir": [r"D:\SnowLuma"],
         "qq_exe": [r"D:\qq\QQ.exe", r"C:\Program Files\Tencent\QQ\QQ.exe"],
         "fish_dir": [r"D:\fish-buddy"],
@@ -2575,8 +2612,7 @@ def _onebot():
     return "", ""
 
 
-ASTROBOT_PY = _p("astrbot_py", os.path.join("D:" + os.sep, "AstrBot", "AstrBot_4.29.1_windows_amd64_portable",
-                     "backend", "python", "python.exe"))
+ASTROBOT_PY = _p("astrbot_py", os.path.join(astrbot_root(), "backend", "python", "python.exe"))
 TTS_SCRIPT = os.path.join(BASE, "tts_edge.py")
 
 
@@ -3054,7 +3090,7 @@ def _proc_running(name):
 
 
 PYD = ASTROBOT_PY
-AB_DIR = _p("astrbot_app", os.path.join("D:" + os.sep, "AstrBot", "AstrBot_4.29.1_windows_amd64_portable", "backend", "app"))
+AB_DIR = _p("astrbot_app", os.path.join(astrbot_root(), "backend", "app"))
 SNOW_DIR = _p("snow_dir", os.path.join("D:" + os.sep, "SnowLuma"))
 QQ_EXE = _p("qq_exe", os.path.join("D:" + os.sep, "qq", "QQ.exe"))
 PET_EXE = _p("pet_exe", os.path.join("D:" + os.sep, "dsh-pet", "dsh-pet-standalone-webm-chat.exe"))
@@ -3072,10 +3108,9 @@ def reload_paths():
     DSH_CMD = _p("dsh_cmd", os.path.join("D:" + os.sep, "dsh", "resources", "runtime", "cli", "bin", "dsh.cmd"))
     DSH_WORKDIR = _p("dsh_workdir", os.path.join("D:" + os.sep, "pet-work"))
     ONEBOT_CFG_DIR = _p("snow_config", os.path.join("D:" + os.sep, "SnowLuma", "config"))
-    ASTROBOT_PY = _p("astrbot_py", os.path.join("D:" + os.sep, "AstrBot", "AstrBot_4.29.1_windows_amd64_portable",
-                                                "backend", "python", "python.exe"))
+    ASTROBOT_PY = _p("astrbot_py", os.path.join(astrbot_root(), "backend", "python", "python.exe"))
     PYD = ASTROBOT_PY
-    AB_DIR = _p("astrbot_app", os.path.join("D:" + os.sep, "AstrBot", "AstrBot_4.29.1_windows_amd64_portable", "backend", "app"))
+    AB_DIR = _p("astrbot_app", os.path.join(astrbot_root(), "backend", "app"))
     SNOW_DIR = _p("snow_dir", os.path.join("D:" + os.sep, "SnowLuma"))
     QQ_EXE = _p("qq_exe", os.path.join("D:" + os.sep, "qq", "QQ.exe"))
     PET_EXE = _p("pet_exe", os.path.join("D:" + os.sep, "dsh-pet", "dsh-pet-standalone-webm-chat.exe"))
