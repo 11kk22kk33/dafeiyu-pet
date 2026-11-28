@@ -96,6 +96,7 @@ summary{cursor:pointer;font-size:13px;font-weight:500}
   <div class="grp">主菜单</div>
   <button class="nav active" data-s="overview"><i></i>总览</button>
   <button class="nav" data-s="chat"><i></i>对话</button>
+  <button class="nav" data-s="model"><i></i>模型</button>
   <button class="nav" data-s="launch"><i></i>开程序</button>
   <button class="nav" data-s="pet"><i></i>桌宠与鱼搭子</button>
   <button class="nav" data-s="modules"><i></i>模块开关</button>
@@ -141,6 +142,31 @@ summary{cursor:pointer;font-size:13px;font-weight:500}
     <div class="row" style="margin-top:10px"><button class="act" onclick="chatSend()">发送</button><button class="act del" onclick="chatClear()">清空记录</button><span class="hint" id="chat-tip"></span></div>
   </div>
   <p class="hint">「清空记录」只清这个页面的本地显示，不删记忆。想让她忘掉某段，去记忆那边处理。</p>
+</section>
+
+<section class="sec" id="s-model">
+  <h2 class="sec-h">模型</h2>
+  <p class="lede">决定她跟谁说话。留空就用内置默认；存盘即生效，不用重启，也不打断正在进行的对话。</p>
+  <div class="card">
+    <div class="row"><b style="flex:1">接口与模型</b><span class="muted" id="m-msg"></span></div>
+    <div class="row" style="margin-top:10px"><span style="flex:0 0 92px">接口地址</span>
+      <input id="m-url" placeholder="https://api.deepseek.com/v1" spellcheck="false" style="flex:1 1 320px"></div>
+    <div class="row" style="margin-top:8px"><span style="flex:0 0 92px">模型名</span>
+      <input id="m-model" placeholder="deepseek-chat" spellcheck="false" style="flex:1 1 320px"></div>
+    <div class="row" style="margin-top:8px"><span style="flex:0 0 92px">备用地址</span>
+      <input id="m-fburl" placeholder="可空；主地址 401/超时才会用" spellcheck="false" style="flex:1 1 320px"></div>
+    <div class="row" style="margin-top:8px"><span style="flex:0 0 92px">备用模型</span>
+      <input id="m-fbmodel" placeholder="qwen-plus" spellcheck="false" style="flex:1 1 320px"></div>
+    <div class="row" style="margin-top:8px"><span style="flex:0 0 92px">Key</span>
+      <input id="m-key" type="password" placeholder="留空表示不改；只写进 key.txt" autocomplete="off" spellcheck="false" style="flex:1 1 320px"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="act" onclick="saveModel()">保存</button>
+      <button class="act" onclick="testModel()">测试连通</button>
+      <button class="act del" onclick="resetModel()">恢复默认</button>
+    </div>
+  </div>
+  <div class="card" id="m-state"><small>读取中…</small></div>
+  <p class="hint">接口地址填到 <code>/v1</code> 也行，会自动补成 <code>/v1/chat/completions</code>。换完点一次「测试连通」，别等哪天她不说话了才发现。</p>
 </section>
 
 <section class="sec" id="s-launch">
@@ -276,7 +302,7 @@ const PET_SWITCHES=[
 let petCfg=null;
 const VISITOR_PERM="能：纯文字聊天（访客卡+备课笔记+他自己之前聊过的摘要），发表情，消息里的图片会一并送上。不能：开程序、读文件、看屏幕、长期记忆、学说话、动作标记、桌面同步、语音、看主人的任何资料。他的摘要单独存在 student-memory.json，和主人记忆不互通。";
 const PB={owner:["pc-text","pc-new","pc-tip"],visitor:["vp-text","vp-new","vp-tip"],family:["fp-text","fp-new","fp-tip"]};
-const SECTIONS={overview:["总览","控制台 / 总览"],chat:["对话","控制台 / 对话"],launch:["开程序","控制台 / 开程序"],pet:["桌宠与鱼搭子","控制台 / 桌宠与鱼搭子"],modules:["模块开关","控制台 / 模块开关"],usage:["用量与消耗","控制台 / 用量与消耗"],policy:["权限与白名单","控制台 / 权限与白名单"],persona:["人格卡","控制台 / 人格卡"],qq:["QQ 与联动","控制台 / QQ 与联动"],emotion:["情绪状态","控制台 / 情绪状态"],todo:["待办提醒","控制台 / 待办提醒"],diary:["日记","控制台 / 日记"]};
+const SECTIONS={overview:["总览","控制台 / 总览"],chat:["对话","控制台 / 对话"],model:["模型","控制台 / 模型"],launch:["开程序","控制台 / 开程序"],pet:["桌宠与鱼搭子","控制台 / 桌宠与鱼搭子"],modules:["模块开关","控制台 / 模块开关"],usage:["用量与消耗","控制台 / 用量与消耗"],policy:["权限与白名单","控制台 / 权限与白名单"],persona:["人格卡","控制台 / 人格卡"],qq:["QQ 与联动","控制台 / QQ 与联动"],emotion:["情绪状态","控制台 / 情绪状态"],todo:["待办提醒","控制台 / 待办提醒"],diary:["日记","控制台 / 日记"]};
 const HAND_KEYS=[["on","挂件总开关"],["voice","挂件语音"],["max_tokens","单次上限"],["history_turns","历史轮数"],["sub_seconds","字幕秒数"],["sub_lines","字幕行数"],["frame_max","抓帧上限"],["frame_min_gap","补帧最小间隔"],["frame_per_hour","每小时抓帧上限"],["frame_hash_gap","画面相似度阈值"],["frame_reuse","旧图复用秒数"],["frame_resend_gap","同图重发间隔"]];
 let handsReply=null;
 const $=id=>document.getElementById(id);
@@ -285,7 +311,7 @@ async function api(path,body){const r=await fetch(path,body?{method:"POST",heade
 async function safeApi(path,body){try{return await api(path,body);}catch(e){return null;}}
 function fmtTokens(v){if(!Number.isFinite(v)||v<=0)return "0";return Math.round(v).toLocaleString("zh-CN");}
 function fmtCny(v){if(!Number.isFinite(v)||v<=0)return "¥0";if(v>=1000)return "¥"+Math.round(v).toLocaleString("zh-CN");if(v>=0.01)return "¥"+v.toFixed(2);if(v>=0.001)return "¥"+v.toFixed(3);return "<¥0.001";}
-function showSection(id){const s=SECTIONS[id];if(!s)return;document.querySelectorAll(".sec").forEach(e=>e.classList.toggle("on",e.id==="s-"+id));document.querySelectorAll(".nav").forEach(e=>e.classList.toggle("active",e.dataset.s===id));$("crumb").textContent=s[0];$("crumb-path").textContent=s[1];try{localStorage.setItem("dfy-sec",id);}catch(e){}const f=$("em-frame");if(f&&id==="emotion"&&!f.getAttribute("src"))f.src="/emotion?embed=1";if(id==="diary")loadDiary();if(id==="chat")chatRender();}
+function showSection(id){const s=SECTIONS[id];if(!s)return;document.querySelectorAll(".sec").forEach(e=>e.classList.toggle("on",e.id==="s-"+id));document.querySelectorAll(".nav").forEach(e=>e.classList.toggle("active",e.dataset.s===id));$("crumb").textContent=s[0];$("crumb-path").textContent=s[1];try{localStorage.setItem("dfy-sec",id);}catch(e){}const f=$("em-frame");if(f&&id==="emotion"&&!f.getAttribute("src"))f.src="/emotion?embed=1";if(id==="diary")loadDiary();if(id==="chat")chatRender();if(id==="model")loadModel();}
 /* ---- 日记：只读，来自 core/diary.py 的 paragraphs() ---- */
 let DIARY=[],DIARY_SHOWN=30;
 function escHtml(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
@@ -658,5 +684,51 @@ document.addEventListener("keydown",function(e){
   if(!inp||document.activeElement!==inp)return;
   if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();chatSend();}
 });
+function mEsc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+async function loadModel(){
+  var m=$("m-msg");if(m)m.textContent="读取中…";
+  try{
+    var r=await fetch("/api/console/model");var j=await r.json();
+    if(!j.ok)throw new Error(j.error||("HTTP "+r.status));
+    var c=j.cfg||{};
+    $("m-url").value=c.base_url||"";$("m-model").value=c.model||"";
+    $("m-fburl").value=c.fallback_url||"";$("m-fbmodel").value=c.fallback_model||"";
+    $("m-key").value="";
+    var st=$("m-state");
+    if(st)st.innerHTML="<small>当前生效：<b>"+mEsc(c.model)+"</b> · "+mEsc(c.base_url)+"<br>"
+      +"配置来源："+(j.fromFile?"config-model.json（你填过的）":"内置默认值")
+      +"　key："+(j.keyConfigured?"已配置":"<b style='color:var(--red)'>未配置，她不会说话</b>")+"</small>";
+    if(m)m.textContent="";
+  }catch(e){if(m)m.textContent="读取失败："+(e&&e.message?e.message:e);}
+}
+async function saveModel(){
+  var m=$("m-msg");if(m)m.textContent="保存中…";
+  var body={cfg:{"base_url":$("m-url").value.trim(),"model":$("m-model").value.trim(),
+                 "fallback_url":$("m-fburl").value.trim(),"fallback_model":$("m-fbmodel").value.trim()}};
+  var k=$("m-key").value.trim();if(k)body.key=k;
+  try{
+    var r=await fetch("/api/console/model",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    var j=await r.json();
+    if(!j.ok)throw new Error(j.error||("HTTP "+r.status));
+    if(j.key&&j.key.ok===false)throw new Error("key 没存上："+(j.key.error||""));
+    if(m)m.textContent="已保存，立刻生效";
+    loadModel();
+  }catch(e){if(m)m.textContent="保存失败："+(e&&e.message?e.message:e);}
+}
+async function testModel(){
+  var m=$("m-msg");if(m)m.textContent="测试中…（花一两个 token）";
+  var body={test:true,cfg:{"base_url":$("m-url").value.trim(),"model":$("m-model").value.trim()}};
+  var k=$("m-key").value.trim();if(k)body.key=k;
+  try{
+    var r=await fetch("/api/console/model",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    var j=await r.json();
+    if(j.ok){if(m)m.textContent="连通正常 · "+j.model+" · "+(j.ms||0)+" ms";}
+    else{if(m)m.textContent="不通 · "+(j.error||("HTTP "+j.status))+(j.detail?" · "+String(j.detail).slice(0,120):"");}
+  }catch(e){if(m)m.textContent="测试失败："+(e&&e.message?e.message:e);}
+}
+function resetModel(){
+  $("m-url").value="";$("m-model").value="";$("m-fburl").value="";$("m-fbmodel").value="";
+  if($("m-msg"))$("m-msg").textContent="已清空，点「保存」才写盘";
+}
 chatRender();
 </script></body></html>

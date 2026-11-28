@@ -101,20 +101,20 @@
       <img class="hd-av" src="assets/char/mascot.webp" alt="" onerror="this.style.display='none'">
       <div>
         <h1>AI 宠物 · 安装向导</h1>
-        <div class="sub">跟着点，一步一步来，大约 10 分钟。动手前先把下面三样备好；全程有两步必须你自己来：登录小号、填 key。</div>
+        <div class="sub">跟着点，三步走完，大约 5 分钟。动手前先把下面三样备好；只有「填 key」这一步必须你自己来。</div>
       </div>
     </div>
     <div class="need">
       <div class="h">开工前要备好这三样</div>
       <div class="i"><b>① 一个小号 QQ</b>　这个号是 AI 的「容器」——她绑在这个号上说话、读消息。别填你天天在用的主号：两边会互相顶下线，消息也会串。新注册一个就行。</div>
-      <div class="i"><b>② 一个 API key</b>　模型按量计费，没有 key 她不会思考。第五步要填，只写进 <code>key.txt</code> 一处。</div>
+      <div class="i"><b>② 一个 API key</b>　模型按量计费，没有 key 她不会思考。第二步要填，只写进 <code>key.txt</code> 一处。</div>
       <div class="i"><b>③ 一张代金券（建议）</b>　推荐阿里云百炼：在校学生可在「<a href="https://university.aliyun.com" target="_blank" rel="noreferrer">云工开物</a>」领 300 元券；不是学生，<a href="https://bailian.console.aliyun.com/" target="_blank" rel="noreferrer">百炼</a>新用户每个模型也有 100 万 token 免费额度。<em>只是推荐，用别家的 key 一样能跑。</em></div>
     </div>
     <div class="dots" id="dots"></div>
     <div class="bar"><i id="barfill"></i></div>
   </header>
   <main id="app" class="card"></main>
-  <footer>本向导只改 config-paths.json 和 key.txt 两个文件，不动源码。　·　<a href="credits.html">鸣谢与许可</a></footer>
+  <footer>本向导只写 config-paths.json、config-model.json、key.txt 三个文件，不动源码。　·　<a href="credits.html">鸣谢与许可</a></footer>
 </div>
 <script>
 (function(){
@@ -207,7 +207,7 @@
 
   function go(n){
     if (n < 1) n = 1;
-    if (n > 5) n = 5;
+    if (n > 3) n = 3;
     S.step = n;
     S.msg = "";
     try { localStorage.setItem(STEP_KEY, String(n)); } catch (e) {}
@@ -220,8 +220,11 @@
       return '<div class="nav" style="justify-content:flex-end">' +
         '<button type="button" onclick="go(2)">下一步 →</button></div>';
     }
-    return '<div class="nav"><button type="button" onclick="go(' + (S.step - 1) + ')">← 上一步</button>' +
-      '<button type="button" onclick="go(' + (S.step + 1) + ')">下一步 →</button></div>';
+    if (S.step === 2) {
+      return '<div class="nav"><button type="button" onclick="go(1)">← 上一步</button>' +
+        '<span style="font-size:13px;color:#6b7280">填完点上面那个「保存并完成」</span></div>';
+    }
+    return '<div class="nav"><button type="button" onclick="go(2)">← 上一步</button></div>';
   }
 
   // ——— 第一步：先选一条路 ———
@@ -238,7 +241,7 @@
   function step1(){
     var cards = '<div class="picks">' +
       pickCard("manual", "手动装 · 我自己来",
-        "自己下载、自己填路径，跟着后面几步走。路径清楚、或者旁边有人带的时候选这个。") +
+        "自己下载、自己填路径，跟着向导走。路径清楚、或者旁边有人带的时候选这个。") +
       pickCard("ai", "让 AI 帮我装",
         "当场体检，生成一份带本机真实结果的委托，粘给你那个能读盘的 AI，路径让它自己去找。", "推荐") +
       "</div>";
@@ -247,7 +250,8 @@
     if (S.pick === "ai") body = aiPanel();
     return '<h2>第一步：先选一条路</h2>' +
       '<p class="lead">两条路最后到同一个地方。区别只有一个：谁来填那些路径。</p>' +
-      cards + body;
+      cards + body +
+      (S.pick ? "" : '<p style="text-align:center;color:#6b7280;font-size:14px;margin:18px 0 0">点上面任意一张卡片继续。</p>');
   }
   function manualPanel(){
     return '<div class="pn">' +
@@ -615,6 +619,19 @@
       nav();
   }
 
+  function pathRows(){
+    var src = S.paths || {};
+    var items = "";
+    for (var i = 0; i < STEP3_KEYS.length; i++) {
+      var k = STEP3_KEYS[i];
+      var v = src[k] == null ? "" : String(src[k]);
+      var miss = v ? "" : " miss";
+      items += '<div class="item' + miss + '"><b>' + esc(labelOf(k)) +
+        '</b><span>' + esc(k) + " · " + esc(hintOf(k)) + '</span>' +
+        '<input type="text" data-k="' + esc(k) + '" value="' + esc(v) + '"></div>';
+    }
+    return items;
+  }
   function step3(){
     var src = S.paths || {};
     var items = "";
@@ -651,16 +668,42 @@
       nav();
   }
 
-  function step5(){
-    return '<h2>第五步：填 key 并完成</h2>' +
-      '<p class="lead">模型 key 只写进 key.txt 这一处，不进配置文件、不进日志。</p>' +
-      '<label for="key">把你的模型 key 粘这里</label>' +
-      '<input type="password" id="key" placeholder="百炼 sk-ws- 开头 / DeepSeek sk- 开头" autocomplete="off">' +
-      '<div class="row"><button class="big" type="button" onclick="finish()">保存并启动</button></div>' +
+  function pickProvider(id){
+    S.provider = id;
+    if (id === "bailian") {
+      S.baseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+      S.model = "deepseek-v4.1-flash-1017";
+    } else if (id === "deepseek") {
+      S.baseUrl = "https://api.deepseek.com/v1";
+      S.model = "deepseek-chat";
+    }
+    render();
+  }
+  function stepModel(){
+    var pv = S.provider || "bailian";
+    function pbtn(id, name, desc){
+      return '<button class="pc' + (pv === id ? " on" : "") + '" type="button" onclick="pickProvider(\'' + id + '\')">' +
+        '<b>' + name + '</b><span>' + desc + '</span></button>';
+    }
+    return '<h2>第二步：填 key 和模型</h2>' +
+      '<p class="lead">她得有一个模型才说得出话。key 只写进 key.txt 这一处，不进配置、不进日志。</p>' +
+      '<div class="picks">' +
+      pbtn("bailian", "阿里百炼", "新用户有免费额度，高校学生还能领 300 元券。地址和模型名我替你填好。") +
+      pbtn("deepseek", "DeepSeek 官方", "用自己的 key，地址 api.deepseek.com。") +
+      pbtn("custom", "其它 / 自己填", "任何 OpenAI 兼容接口都能用，自己填地址和模型名。") +
+      "</div>" +
+      '<label for="m-url">接口地址</label>' +
+      '<input type="text" id="m-url" placeholder="https://...（填到 /v1 就行）" value="' + esc(S.baseUrl || "") + '">' +
+      '<label for="m-model">模型名</label>' +
+      '<input type="text" id="m-model" placeholder="例如 deepseek-v4.1-flash-1017" value="' + esc(S.model || "") + '">' +
+      '<label for="key">key</label>' +
+      '<input type="password" id="key" placeholder="sk- 开头那串" autocomplete="off">' +
+      '<div class="row"><button class="big" type="button" onclick="testKey()">先测一下通不通</button></div>' +
+      '<div class="row"><button class="big" type="button" onclick="finish()">保存并完成</button></div>' +
       msgBox() +
-      '<div class="note">还没有 key？去阿里云百炼控制台的「API-KEY 管理」新建一条——<b>只显示一次</b>，当场复制存好。' +
-      '拿不到百炼的 key，用 DeepSeek 或别家的也行，只要长得像 <code>sk-</code> 开头那串。</div>' +
-      '<div class="note">保存后顺手启动整条链。启动要几十秒，控制台能打开就算成功。</div>' +
+      '<div class="note">还没有 key？去对应控制台的「API-KEY 管理」新建一条——<b>只显示一次</b>，当场复制存好。' +
+      '百炼的以 <code>sk-ws-</code> 开头，DeepSeek 以 <code>sk-</code> 开头。</div>' +
+      '<div class="note">保存后不用重启，下一句话就用新配置。</div>' +
       nav();
   }
 
@@ -668,11 +711,10 @@
     var here = window.location.href;
     var bat = "@echo off\r\nstart \"\" \"" + API + "/console\"\r\n";
     return '<h2 class="big-ok">装好了！</h2>' +
-      '<p class="lead" style="text-align:center">下面三条都能过，就说明这套真的跑起来了。</p>' +
+      '<p class="lead" style="text-align:center">下面两条都能过，就说明她真的能说话了。</p>' +
       '<div class="chk">' +
       "<div>1. 浏览器打开 " + API + "/health 返回 200</div>" +
-      "<div>2. QQ 私聊发一句「在吗」，三秒内有回复</div>" +
-      "<div>3. 控制台 " + API + "/console 能打开、状态不是灰色</div>" +
+      "<div>2. 控制台 → 左边第二个「对话」→ 发一句，她有回复</div>" +
       "</div>" +
       '<div class="row"><button class="big" type="button" onclick="openConsole()">打开控制台</button></div>' +
       '<label>桌面快捷方式（浏览器里建不了，把下面这段存成 打开控制台.bat 双击即可）</label>' +
@@ -680,12 +722,25 @@
       '<div class="row"><button class="big ghost" type="button" onclick="copyBat()">复制这段文字</button></div>' +
       msgBox() +
       '<div id="pw"></div>' +
+      '<details style="margin-top:22px"><summary style="cursor:pointer;font-weight:600">想让她进 QQ 群？点开看要补什么（不接就跳过）</summary>' +
+      '<div style="margin-top:14px">' +
+      '<p class="lead" style="margin:0 0 10px">不接 QQ 完全能用，控制台就是主入口。接 QQ 才需要下面这些。</p>' +
+      '<div class="links">' +
+      '<a href="https://im.qq.com/pcqq/" target="_blank" rel="noreferrer">① QQ 客户端（要一个小号）</a>' +
+      '<a href="https://github.com/AstrBotDevs/AstrBot/releases" target="_blank" rel="noreferrer">② AstrBot（把她接进 QQ）</a>' +
+      "</div>" +
+      '<div class="row"><button class="big" type="button" onclick="autoFill()">自动探测路径</button>' +
+      '<button class="big ghost" type="button" onclick="savePaths()">保存路径</button></div>' +
+      '<div class="pk">' + pathRows() + "</div>" +
+      '<div class="note"><b>还差一个「协议端」。</b>它把 QQ 变成标准接口，本项目<b>不提供、不分发、也不提供下载指引</b>——你需要自己合法获得一份，把目录填进 <code>snow_dir</code>。手上没有就跳过。</div>' +
+      '<div class="note">协议层起好后用<b>小号</b>扫码登录。别用主号：两边会互相顶下线，别人的消息还会被当成「主人说的」。</div>' +
+      "</div></details>" +
       '<div class="note">向导进度存在本机浏览器里，刷新不会丢；全部做完可以关掉这个页面。</div>' +
-      '<div class="nav"><button type="button" onclick="go(5)">← 上一步</button><button type="button" onclick="reset()">重新走一遍</button></div>';
+      '<div class="nav"><button type="button" onclick="go(2)">← 上一步</button><button type="button" onclick="reset()">重新走一遍</button></div>';
   }
 
   function render(){
-    var names = ["选路", "接 QQ（可选）", "配路径", "登录小号 QQ", "填 key"];
+    var names = ["选路", "填 key 与模型", "完成"];
     var dots = "";
     for (var i = 0; i < names.length; i++) {
       var n = i + 1;
@@ -693,11 +748,10 @@
       dots += '<div class="dot' + cls + '">' + n + " · " + names[i] + "</div>";
     }
     $("dots").innerHTML = dots;
-    $("barfill").style.width = Math.round((S.step / 5) * 100) + "%";
-    var body = [step1, step2, step3, step4, step5][S.step - 1]();
-    if (S.step === 6) body = donePage();
+    $("barfill").style.width = Math.round((S.step / 3) * 100) + "%";
+    var body = [step1, stepModel, donePage][S.step - 1]();
     $("app").innerHTML = body;
-    if (S.step === 6) setTimeout(pathWarn, 80);
+    if (S.step === 3) setTimeout(pathWarn, 80);
   }
 
   // 完成页兜底：所有外部程序都探测不到，说明第三步压根没保存过路径。
@@ -713,8 +767,8 @@
       var el = $("pw");
       if (!el || !total || miss < total) return;
       el.innerHTML = '<div class="note" style="border:1px solid #d94a76;background:#fff5f8;color:#8e2739">' +
-        "<b>路径还没配。</b>从安装包装的人最容易漏这一步：程序能开，但 AstrBot / QQ / 协议层一个都连不上，" +
-        "控制台会是一整片灰。点下面「← 上一步」退到第三步，点一次「保存路径」再回来。" + "</div>";
+        "<b>路径还没配。</b>如果你打算接 QQ，展开上面「想让她进 QQ 群」那一块，" +
+        "点一次「自动探测路径」再点「保存路径」。不接 QQ 就忽略这条。" + "</div>";
     });
   }
 
@@ -804,18 +858,34 @@
       else { note("err", "还没检测到，再等等——协议层连上要十几秒。"); }
     });
   }
+  function testKey(){
+    var k = ($("key") ? $("key").value : "").replace(/^\s+|\s+$/g, "");
+    var u = ($("m-url") ? $("m-url").value : "").replace(/^\s+|\s+$/g, "");
+    var m = ($("m-model") ? $("m-model").value : "").replace(/^\s+|\s+$/g, "");
+    if (!k) { note("err", "先填 key 再测。"); return; }
+    note("info", "测试中…（会花一两个 token）");
+    http("POST", "/api/console/model", { test: true, key: k, cfg: { base_url: u, model: m } }).then(function(j){
+      if (!j || !j.ok) {
+        note("err", "不通：" + ((j && (j.error || ("HTTP " + j.status))) || "未知错误") +
+          (j && j.detail ? " · " + String(j.detail).slice(0, 120) : ""));
+        return;
+      }
+      note("ok", "连通正常 · " + j.model + " · " + (j.ms || 0) + " ms，可以保存了");
+    });
+  }
   function finish(){
-    var v = ($("key") ? $("key").value : "").replace(/^\s+|\s+$/g, "");
-    if (!v) { note("err", "key 还没填。去模型控制台复制一条，sk- 开头那串。"); return; }
-    note("info", "保存 key…");
-    http("POST", "/api/console/key", { key: v }).then(function(j){
-      if (!j || !j.ok) { note("err", (j && j.error) || "key 保存失败"); return; }
-      note("info", "key 已保存，正在启动…");
-      http("POST", "/api/console/launch", { what: "brain", on: true }).then(function(j2){
-        S.step = 6;
-        try { localStorage.setItem(STEP_KEY, "6"); } catch (e) {}
-        render();
-      });
+    var k = ($("key") ? $("key").value : "").replace(/^\s+|\s+$/g, "");
+    var u = ($("m-url") ? $("m-url").value : "").replace(/^\s+|\s+$/g, "");
+    var m = ($("m-model") ? $("m-model").value : "").replace(/^\s+|\s+$/g, "");
+    if (!k) { note("err", "key 还没填。去模型控制台复制一条，sk- 开头那串。"); return; }
+    if (!u || !m) { note("err", "接口地址和模型名要填上，不然她不知道去哪说话。"); return; }
+    note("info", "保存中…");
+    http("POST", "/api/console/model", { cfg: { base_url: u, model: m }, key: k }).then(function(j){
+      if (!j || !j.ok) { note("err", (j && j.error) || "保存失败"); return; }
+      note("ok", "已保存，立刻生效");
+      S.step = 3;
+      try { localStorage.setItem(STEP_KEY, "3"); } catch (e) {}
+      setTimeout(render, 600);
     });
   }
   function openConsole(){ window.open(API + "/console", "_blank"); }
@@ -838,12 +908,13 @@
   window.pick = pick; window.genGuide = genGuide; window.copyGuide = copyGuide;
   window.recheck = recheck;
   window.openQQ = openQQ; window.check4 = check4; window.finish = finish;
+  window.pickProvider = pickProvider; window.testKey = testKey;
   window.openConsole = openConsole; window.copyBat = copyBat; window.reset = reset;
 
   try {
     var saved = 1;
     try { saved = parseInt(localStorage.getItem(STEP_KEY) || "1", 10) || 1; } catch (e) { saved = 1; }
-    S.step = saved >= 1 && saved <= 6 ? saved : 1;
+    S.step = saved >= 1 && saved <= 3 ? saved : 1;
     render();
     if (window.location.protocol === "file:") {
       setTimeout(function(){ note("info", "当前是以文件方式打开的。接口已允许跨源；若提示连不上，先启动程序再点一次。"); }, 300);

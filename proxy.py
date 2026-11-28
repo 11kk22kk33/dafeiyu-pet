@@ -238,6 +238,7 @@ def save_paths(patch):
     if not changed:
         return {"ok": True, "changed": [], "paths": cur}
     _write_json(path, cur)
+    reload_paths()
     log("console paths updated: " + ",".join(changed))
     return {"ok": True, "changed": changed, "paths": cur}
 
@@ -275,9 +276,128 @@ FAMILY_INDEX = os.path.join(FAMILY_DIR, "active.json")
 MEMORY_FILE = os.path.join(BASE, "memory.json")
 LOG_FILE = os.path.join(BASE, "proxy.log")
 
+# ── 模型端点：config-model.json 优先，缺省用下面三个默认值 ─────────────────
+# 字段（都可缺）：base_url / model / fallback_url / fallback_model
+# 存盘即生效（按 mtime 缓存），不用重启；base_url 填到 /v1 或整条都行。
+MODEL_CFG_FILE = os.path.join(BASE, "config-model.json")
 UPSTREAM = "https://ws-vxmnafoy3yn5nowy.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions"
 UPSTREAM_FALLBACK = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
 MODEL = "deepseek-v4.1-flash-1017"
+_MCFG_CACHE = {"mtime": None, "cfg": None}
+
+
+def norm_upstream(u):
+    """把填进来的地址收成 /chat/completions 整条；空串返回空。"""
+    u = str(u or "").strip().rstrip("/")
+    if not u:
+        return ""
+    if u.endswith("/chat/completions"):
+        return u
+    if u.endswith("/v1"):
+        return u + "/chat/completions"
+    return u + "/v1/chat/completions"
+
+
+def model_cfg():
+    """读 config-model.json（按 mtime 缓存）。缺文件、坏 JSON 全走默认值。"""
+    try:
+        mt = os.path.getmtime(MODEL_CFG_FILE)
+    except OSError:
+        mt = 0
+    if _MCFG_CACHE["mtime"] == mt and _MCFG_CACHE["cfg"] is not None:
+        return _MCFG_CACHE["cfg"]
+    raw = {}
+    if mt:
+        try:
+            with open(MODEL_CFG_FILE, "r", encoding="utf-8-sig") as f:
+                raw = json.load(f) or {}
+        except Exception as exc:
+            log("config-model.json unreadable: %r" % (exc,))
+            raw = {}
+    cfg = {
+        "base_url": norm_upstream(raw.get("base_url")) or UPSTREAM,
+        "model": str(raw.get("model") or "").strip()[:80] or MODEL,
+        "fallback_url": norm_upstream(raw.get("fallback_url")) or UPSTREAM_FALLBACK,
+        "fallback_model": str(raw.get("fallback_model") or "").strip()[:80] or "qwen-plus",
+    }
+    _MCFG_CACHE["mtime"] = mt
+    _MCFG_CACHE["cfg"] = cfg
+    return cfg
+
+
+def save_model_cfg(patch):
+    """写 config-model.json：只认四个键，空串表示删掉该键、回落默认。"""
+    allowed = ("base_url", "model", "fallback_url", "fallback_model")
+    path = MODEL_CFG_FILE
+    cur = _read_json(path, {}) or {}
+    changed = []
+    for k in allowed:
+        if k not in (patch or {}):
+            continue
+        v = str(patch.get(k) or "").strip()[:300]
+        if k in ("base_url", "fallback_url"):
+            if v and not (v.startswith("http://") or v.startswith("https://")):
+                continue
+        elif k == "model" or k == "fallback_model":
+            v = v[:80]
+        if cur.get(k, "") != v:
+            cur[k] = v
+            changed.append(k)
+    if not changed:
+        return {"ok": True, "changed": [], "cfg": model_cfg(),
+                "fromFile": os.path.exists(path)}
+    keep = {k: v for k, v in cur.items() if k in allowed and str(v or "").strip()}
+    if keep:
+        _write_json(path, keep)
+    elif os.path.exists(path):
+        os.remove(path)
+    _MCFG_CACHE["mtime"] = None
+    _MCFG_CACHE["cfg"] = None
+    log("console model updated: " + ",".join(changed))
+    return {"ok": True, "changed": changed, "cfg": model_cfg(),
+            "fromFile": os.path.exists(path)}
+
+
+def test_model(patch=None, key=None):
+    """用一条 max_tokens=1 的请求验端点+key。只读，不改任何配置。"""
+    cfg = model_cfg().copy()
+    patch = patch or {}
+    b = str(patch.get("base_url") or "").strip()
+    m = str(patch.get("model") or "").strip()
+    if b:
+        cfg["base_url"] = norm_upstream(b) or cfg["base_url"]
+    if m:
+        cfg["model"] = m[:80]
+    kk = str(key or "").strip() or read_key()
+    if not kk:
+        return {"ok": False, "error": "还没有 key：先在下面把 key 填进来再测"}
+    body = {"model": cfg["model"],
+            "messages": [{"role": "user", "content": "ping"}],
+            "max_tokens": 1, "stream": False}
+    req = urllib.request.Request(
+        cfg["base_url"], data=json.dumps(body).encode("utf-8"),
+        headers={"Authorization": "Bearer " + kk, "Content-Type": "application/json"},
+        method="POST")
+    t0 = time.time()
+    try:
+        with urllib.request.urlopen(req, timeout=25) as r:
+            raw = r.read()[:400]
+            return {"ok": True, "status": r.status, "ms": int((time.time() - t0) * 1000),
+                    "model": cfg["model"], "url": cfg["base_url"],
+                    "preview": raw.decode("utf-8", "ignore")[:200]}
+    except urllib.error.HTTPError as exc:
+        detail = ""
+        try:
+            detail = exc.read()[:300].decode("utf-8", "ignore")
+        except Exception:
+            pass
+        return {"ok": False, "status": exc.code, "ms": int((time.time() - t0) * 1000),
+                "model": cfg["model"], "url": cfg["base_url"],
+                "error": "HTTP %d" % exc.code, "detail": detail}
+    except Exception as exc:
+        return {"ok": False, "ms": int((time.time() - t0) * 1000),
+                "model": cfg["model"], "url": cfg["base_url"],
+                "error": repr(exc)[:160]}
 MAX_MEMORY = 40
 # ---- 上下文防爆：注入给模型的东西必须有硬上限，不随聊天无限长 ----
 MAX_HIST_MSGS = 30      # 历史对话最多带几条（2026-11-26：20→30，原值 30 句就掉出窗口）
@@ -604,17 +724,18 @@ def _post(url, body_obj, key, accept, timeout):
 
 
 def post_chat(body_obj, timeout=180, accept="application/json"):
-    """上行：maas 端点失败（鉴权/额度/5xx）时退回 dashscope 官方 qwen-plus（同一张券），别让桌宠哑掉。"""
+    """上行：主端点失败（鉴权/额度/5xx）时退回备用端点，别让桌宠哑掉。"""
+    cfg = model_cfg()
     try:
-        return _post(UPSTREAM, body_obj, read_key(), accept, timeout)
+        return _post(cfg["base_url"], body_obj, read_key(), accept, timeout)
     except urllib.error.HTTPError as exc:
         if exc.code in (400, 401, 403, 404, 422, 429, 500, 502, 503, 504):
             fb = os.path.join(BASE, "key_asd.txt")
             if os.path.exists(fb):
-                log(f"primary {exc.code} -> fallback dashscope qwen-plus")
+                log(f"primary {exc.code} -> fallback {cfg['fallback_model']}")
                 b2 = dict(body_obj)
-                b2["model"] = "qwen-plus"
-                return _post(UPSTREAM_FALLBACK, b2, read_key(fb), accept, timeout)
+                b2["model"] = cfg["fallback_model"]
+                return _post(cfg["fallback_url"], b2, read_key(fb), accept, timeout)
         raise
 
 
@@ -1169,7 +1290,7 @@ def lt_consolidate(force=False):
             "NONE                 这次没有任何值得记的\n"
             "能并进已有条目就不要新增；同一件事只写一次；别写寒暄，别写你自己的心情。"
         )
-        body = {"model": MODEL,
+        body = {"model": model_cfg()["model"],
                 "messages": [{"role": "system", "content": op_prompt},
                              {"role": "user", "content": head + "\n".join(lines)}],
                 "temperature": 0.3, "max_tokens": 700,
@@ -1853,7 +1974,7 @@ def student_reply(payload, nick, uid, level="visitor"):
         sys += "\n\n（这条是正经问题：三句以内把答案说清楚，举个贴近的例子，说完就停，别硬凑一句提问。）"
     else:
         sys += "\n\n（这条是闲聊：一到两句，像好朋友接话，可以说说自己的感受，别上课、别反问。）"
-    body = {"model": MODEL,
+    body = {"model": model_cfg()["model"],
             "messages": [{"role": "system", "content": sys}] + msgs[-10:],
             "temperature": 0.72, "max_tokens": 700}
     normalize_images(body["messages"])
@@ -2942,6 +3063,27 @@ PET_ARGS = ["--slot", "0"]
 FISH_EXE = _p("fish_exe", os.path.join(_p("fish_dir", os.path.join("D:" + os.sep, "fish-buddy")), "fb-merged.exe"))
 FISH_PROC = "fb-merged.exe"
 FISH_DIR = _p("fish_dir", os.path.join("D:" + os.sep, "fish-buddy"))
+
+def reload_paths():
+    """重读 config-paths.json 并刷新所有路径全局：向导/控制台配完即生效，不用重启。"""
+    global PATHS, DSH_CMD, DSH_WORKDIR, ONEBOT_CFG_DIR, ASTROBOT_PY, PYD
+    global AB_DIR, SNOW_DIR, QQ_EXE, PET_EXE, FISH_DIR, FISH_EXE
+    PATHS = _paths()
+    DSH_CMD = _p("dsh_cmd", os.path.join("D:" + os.sep, "dsh", "resources", "runtime", "cli", "bin", "dsh.cmd"))
+    DSH_WORKDIR = _p("dsh_workdir", os.path.join("D:" + os.sep, "pet-work"))
+    ONEBOT_CFG_DIR = _p("snow_config", os.path.join("D:" + os.sep, "SnowLuma", "config"))
+    ASTROBOT_PY = _p("astrbot_py", os.path.join("D:" + os.sep, "AstrBot", "AstrBot_4.29.1_windows_amd64_portable",
+                                                "backend", "python", "python.exe"))
+    PYD = ASTROBOT_PY
+    AB_DIR = _p("astrbot_app", os.path.join("D:" + os.sep, "AstrBot", "AstrBot_4.29.1_windows_amd64_portable", "backend", "app"))
+    SNOW_DIR = _p("snow_dir", os.path.join("D:" + os.sep, "SnowLuma"))
+    QQ_EXE = _p("qq_exe", os.path.join("D:" + os.sep, "qq", "QQ.exe"))
+    PET_EXE = _p("pet_exe", os.path.join("D:" + os.sep, "dsh-pet", "dsh-pet-standalone-webm-chat.exe"))
+    FISH_DIR = _p("fish_dir", os.path.join("D:" + os.sep, "fish-buddy"))
+    FISH_EXE = _p("fish_exe", os.path.join(FISH_DIR, "fb-merged.exe"))
+    return PATHS
+
+
 DETACH = 0x00000008 | 0x00000200
 
 
@@ -3996,7 +4138,7 @@ def _promise_kept(rid):
 
 def reminder_try(text, uid):
     """抽「几点提醒我啥」。返回 (回话, ok|bad)；None 表示这句不是提醒，照常聊。"""
-    body = {"model": MODEL,
+    body = {"model": model_cfg()["model"],
             "messages": [{"role": "system", "content": REMIND_SYS % time.strftime("%Y-%m-%d %H:%M %A")},
                          {"role": "user", "content": text}],
             "tools": REMIND_TOOLS, "tool_choice": "auto",
@@ -4254,6 +4396,17 @@ class Handler(BaseHTTPRequestHandler):
                              "writable": sorted(HAND_WRITABLE),
                              "restartHint": "改其余项需编辑 hands.json 并重启大脑服务 proxy.py；重启鱼搭子 exe 无效",
                              "replyPort": bool(_pid_on(8778))})
+            return
+        if path == "/api/console/model":
+            self._json(200, {
+                "ok": True,
+                "cfg": model_cfg(),
+                "fromFile": os.path.exists(MODEL_CFG_FILE),
+                "keyConfigured": os.path.exists(KEY_FILE),
+                "defaults": {"base_url": UPSTREAM, "model": MODEL,
+                             "fallback_url": UPSTREAM_FALLBACK,
+                             "fallback_model": "qwen-plus"},
+            })
             return
         if path == "/api/console/pet":
             self._json(200, pet_conf_view())
@@ -4566,7 +4719,7 @@ class Handler(BaseHTTPRequestHandler):
         self._gid = gid
         _bili_watch_kick(user_text)
         payload["messages"] = build_messages(payload, source)
-        payload["model"] = MODEL
+        payload["model"] = model_cfg()["model"]
         if source == "qq":
             # 闲聊：温度 0.8 让它有点随机；群里放到 6～10 句，私聊仍压到一两句
             payload["temperature"] = 0.8
@@ -4711,6 +4864,15 @@ class Handler(BaseHTTPRequestHandler):
                 return
             elif action == "key":
                 out = save_key(data.get("key"))
+                self._json(200 if out.get("ok") else 400, out)
+                return
+            elif action == "model":
+                if data.get("test"):
+                    out = test_model(data.get("cfg") or data, data.get("key"))
+                else:
+                    out = save_model_cfg(data.get("cfg") or data)
+                    if data.get("key"):
+                        out["key"] = save_key(data.get("key"))
                 self._json(200 if out.get("ok") else 400, out)
                 return
             if action == "master":

@@ -602,15 +602,18 @@
       }
       rows = '<div class="list">' + rows + "</div>";
     }
-    return '<h2>第二步：安装 QQ 和协议层</h2>' +
-      '<p class="lead">这一步需要你自己装两个软件，我负责检查装好没有。</p>' +
+    return '<h2>第二步：装好 QQ 和协议层</h2>' +
+      '<p class="lead">两个都要你自己装，我负责检查装好没有。协议层用我给你的那个整合包里带的，不用另外去找。</p>' +
       '<div class="links">' +
       '<a href="https://im.qq.com/pcqq/" target="_blank" rel="noreferrer">① 下载 QQ 客户端</a>' +
-      '<a href="https://github.com/NapNeko/NapCatQQ-Desktop" target="_blank" rel="noreferrer">② 下载协议层（SnowLuma / NapCat 类）</a>' +
       "</div>" +
+      '<div class="need"><div class="h">② 协议层：解压整合包里的 SnowLuma-portable.zip</div>' +
+      '<div class="i">右键「全部解压缩」，路径填 <b>D:\\</b>（就是 D 盘根目录；<b>别</b>填 D:\\SnowLuma，那样会多套一层）。</div>' +
+      '<div class="i">解压完应该是 <b>D:\\SnowLuma</b> 这个文件夹，里面能看到 <b>launcher.bat</b>。双击它打开，用<b>小号 QQ</b> 扫码登录。</div>' +
+      '<div class="i"><em>已经装好、能开着的就跳过这条；要重装才需要看这里。</em></div></div>' +
       '<div class="row"><button class="big" type="button" onclick="check2()">我装好了，检查</button></div>' +
       rows + msgBox() +
-      '<div class="note">SnowLuma 有非商业许可，请自己下载安装，我不会替你装，也不随包分发。' +
+      '<div class="note">SnowLuma 有非商业许可，这份是整合包里附带的，自己用就行，别再往外传、别拿去做买卖。' +
       "检查用的是程序里的探测接口，只读路径，不改任何东西。</div>" +
       nav();
   }
