@@ -37,6 +37,31 @@ def _bp(key, fallback):
 CONFIG = _bp("astrbot_cmd_config", os.path.join("D:" + os.sep, "AstrBot", "AstrBot_4.29.1_windows_amd64_portable", "backend", "app", "data", "cmd_config.json"))
 FFMPEG = os.path.join(_bp("astrbot_bin", os.path.join("D:" + os.sep, "AstrBot", "bin")), "ffmpeg.exe")
 
+_FF_EXE = ""
+
+
+def ffmpeg_exe():
+    """优先用配置里 AstrBot 自带的 ffmpeg；没有就找系统的，再没有就用包内 imageio-ffmpeg 带的那份。"""
+    global _FF_EXE
+    if _FF_EXE:
+        return _FF_EXE
+    cands = [FFMPEG]
+    w = shutil.which("ffmpeg")
+    if w:
+        cands.append(w)
+    try:
+        import imageio_ffmpeg
+        cands.append(imageio_ffmpeg.get_ffmpeg_exe())
+    except Exception:
+        pass
+    for c in cands:
+        if c and os.path.exists(c):
+            _FF_EXE = c
+            return c
+    _FF_EXE = FFMPEG
+    return _FF_EXE
+
+
 # 句末停顿（秒）：越「重」的标点停得越久
 PAUSE = {"，": 0.18, "、": 0.14, "；": 0.26, "。": 0.34, "！": 0.28, "？": 0.34,
          "…": 0.5, "—": 0.45, ":": 0.2, ",": 0.16}
@@ -114,7 +139,7 @@ def mood(clause):
 
 
 def silence(path, seconds):
-    cmd = [FFMPEG, "-y", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono",
+    cmd = [ffmpeg_exe(), "-y", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono",
            "-t", "%.2f" % seconds, "-c:a", "libmp3lame", "-b:a", "48k",
            "-ar", "24000", "-ac", "1", path]
     r = subprocess.run(cmd, capture_output=True, timeout=60)
@@ -126,7 +151,7 @@ def concat(parts, out, tmp):
     with open(lst, "w", encoding="utf-8") as f:
         for p in parts:
             f.write("file '%s'\n" % p.replace("\\", "/"))
-    r = subprocess.run([FFMPEG, "-y", "-f", "concat", "-safe", "0", "-i", lst,
+    r = subprocess.run([ffmpeg_exe(), "-y", "-f", "concat", "-safe", "0", "-i", lst,
                         "-c", "copy", out], capture_output=True, timeout=120)
     return r.returncode == 0 and os.path.exists(out) and os.path.getsize(out) > 1000
 
@@ -147,7 +172,7 @@ def main():
     base_rate, base_vol, base_pitch = pct(c.get("rate")), pct(c.get("volume")), hz(c.get("pitch"))
 
     parts = clauses(text)
-    if not shutil.which(FFMPEG) and not os.path.exists(FFMPEG):
+    if not os.path.exists(ffmpeg_exe()):
         asyncio.run(synth(text, voice, "%+d%%" % base_rate, "%+d%%" % base_vol, "%+dHz" % base_pitch, out))
         return 0 if os.path.getsize(out) > 1000 else 1
 
